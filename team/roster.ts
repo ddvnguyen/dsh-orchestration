@@ -63,7 +63,7 @@ export const ROSTER: readonly TeamRosterProfile[] = [
     kind: 'agent',
     cwd: WORKSPACE_ROOT,
     tier: 't2',
-    provider: 'opencode/opencode-go/minimax-m3',
+    provider: 'opencode/opencode-go/mimo-v2.5',
     promptFile: 'prompts/lead.md',
   },
   {
@@ -117,8 +117,8 @@ export const ROSTER: readonly TeamRosterProfile[] = [
     claimRole: 'qa',
     kind: 'agent',
     cwd: WORKSPACE_ROOT,
-    tier: 't1',
-    provider: 'claude/claude-sonnet-5',
+    tier: 't2',
+    provider: 'opencode/opencode-go/mimo-v2.5',
     promptFile: 'prompts/qa.md',
   },
 ]
