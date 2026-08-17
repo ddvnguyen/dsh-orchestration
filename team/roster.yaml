@@ -1,0 +1,103 @@
+# V3 fleet roster — the team as fleet-agent profiles (issue #30).
+#
+# Human source-of-truth for the V3 roster. The RUNTIME source is the typed
+# mirror `roster.ts` (this family has no yaml dependency; the two are kept in
+# sync manually — roster.ts documents the mirror). Everything here is ported
+# from the V2 roster in orchestration/v2/prompts/shared-v2-context.md:3-13.
+#
+# NOTE on the owner: V2 roster line 7 lists `owner` (@owner) as the human
+# operator — the inbound gate always admits them. V3 registers NO owner
+# identity: a human does not get an ed25519 keypair and cannot claim tasks via
+# claimWake. The owner stays an inbound-gate concept (documented in
+# leader-contract.md and job-protocol.md), NOT a fleet-agent profile.
+#
+# Fields match TeamRosterProfile in roster.ts:
+#   agentId   stable slug == the fleet-agent agent id (and the dsh agent id)
+#   name      human label
+#   role      V2 org-chart role (claimRole used for task routing)
+#   claimRole org-chart role routed to this agent by fleet-tasks claimWake
+#   kind      'agent' (a human operator would be 'human' — none here)
+#   cwd       workspace the agent works in (task worktrees live under it)
+#   tier      provider tier — from orchestration/providers.yaml + agents/*.md
+#   promptFile per-role V3 prompt (see prompts/)
+#   from      the V2 prompt / contract file this entry is ported from
+
+version: v3.0.0
+date: 2026-08-16
+source:
+  - orchestration/v2/prompts/shared-v2-context.md   # V2 roster + roles + job kinds
+  - orchestration/v2/prompts/lead.md                # V2 lead responsibilities
+  - orchestration/v2/prompts/arch.md                # V2 arch responsibilities
+  - orchestration/v2/prompts/dev-1.md / dev-2.md    # V2 dev responsibilities
+  - orchestration/v2/prompts/devops.md              # V2 devops responsibilities
+  - orchestration/v2/prompts/qa.md                  # V2 qa responsibilities (gate)
+  - orchestration/agents/lead.md + LEAD_CHARTER.md  # current leader contract + tier
+  - orchestration/providers.yaml                    # tier -> provider routing
+  - orchestration/state/fleet-*-26.md               # fleet plugin APIs
+
+agents:
+  - agentId: lead
+    name: Lead
+    role: lead
+    claimRole: lead
+    kind: agent
+    cwd: <dsh workspace root>        # repo root the fleet runs in
+    tier: t2                          # agents/lead.md:4 — default opencode-go minimax-m3; escalate t1 Claude for PLAN/architecture
+    provider: opencode/opencode-go/minimax-m3
+    promptFile: prompts/lead.md
+    from: orchestration/v2/prompts/lead.md + orchestration/agents/lead.md
+
+  - agentId: arch
+    name: Architect
+    role: arch
+    claimRole: arch
+    kind: agent
+    cwd: <dsh workspace root>
+    tier: t1                          # providers.yaml t1 — planning/architecture only
+    provider: claude/claude-sonnet-5
+    promptFile: prompts/arch.md
+    from: orchestration/v2/prompts/arch.md
+
+  - agentId: dev-1
+    name: Developer 1
+    role: dev-1
+    claimRole: dev-1
+    kind: agent
+    cwd: <dsh workspace root>
+    tier: t2                          # providers.yaml t2 — main implementation driver
+    provider: opencode/opencode-go/mimo-v2.5
+    promptFile: prompts/dev-1.md
+    from: orchestration/v2/prompts/dev-1.md
+
+  - agentId: dev-2
+    name: Developer 2
+    role: dev-2
+    claimRole: dev-2
+    kind: agent
+    cwd: <dsh workspace root>
+    tier: t2                          # providers.yaml t2 — second implementation slot
+    provider: opencode/opencode-go/mimo-v2.5
+    promptFile: prompts/dev-2.md
+    from: orchestration/v2/prompts/dev-2.md
+
+  - agentId: devops
+    name: Devops
+    role: devops
+    claimRole: devops
+    kind: agent
+    cwd: <dsh workspace root>
+    tier: t2                          # providers.yaml t2 — infra/deploy/release
+    provider: opencode/opencode-go/mimo-v2.5
+    promptFile: prompts/devops.md
+    from: orchestration/v2/prompts/devops.md
+
+  - agentId: qa
+    name: QA
+    role: qa
+    claimRole: qa
+    kind: agent
+    cwd: <dsh workspace root>
+    tier: t1                          # providers.yaml t1 — review gate, cross-provider verification
+    provider: claude/claude-sonnet-5
+    promptFile: prompts/qa.md
+    from: orchestration/v2/prompts/qa.md

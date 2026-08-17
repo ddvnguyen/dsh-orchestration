@@ -1,0 +1,235 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--dsw-alias-border-secondary);
+  color: var(--dsw-alias-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--dsw-alias-border-tertiary);
+  vertical-align: middle;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--dsw-alias-text-secondary);
+}
+
+.loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--dsw-alias-text-secondary);
+}
+
+.error {
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-danger-subtle);
+  color: var(--dsw-alias-text-danger);
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badgeRunning {
+  background: var(--dsw-alias-bg-success-subtle);
+  color: var(--dsw-alias-text-success);
+}
+
+.badgeDone {
+  background: var(--dsw-alias-bg-tertiary);
+  color: var(--dsw-alias-text-secondary);
+}
+
+.badgeIdle {
+  background: var(--dsw-alias-bg-secondary);
+  color: var(--dsw-alias-text-tertiary);
+}
+
+.badgeArchived {
+  background: var(--dsw-alias-bg-warning-subtle);
+  color: var(--dsw-alias-text-warning);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--dsw-alias-border-secondary);
+  background: var(--dsw-alias-bg-primary);
+  color: var(--dsw-alias-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:hover {
+  background: var(--dsw-alias-bg-secondary);
+}
+
+.btnPrimary {
+  border-color: var(--dsw-alias-border-brand);
+  background: var(--dsw-alias-bg-brand);
+  color: var(--dsw-alias-text-on-brand);
+}
+
+.btnPrimary:hover {
+  background: var(--dsw-alias-bg-brand-hover);
+}
+
+.btnDanger {
+  border-color: var(--dsw-alias-border-danger);
+  color: var(--dsw-alias-text-danger);
+}
+
+.btnDanger:hover {
+  background: var(--dsw-alias-bg-danger-subtle);
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form label {
+  font-size: 13px;
+  color: var(--dsw-alias-text-secondary);
+}
+
+.form input,
+.form select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--dsw-alias-border-secondary);
+  background: var(--dsw-alias-bg-primary);
+  color: var(--dsw-alias-text-primary);
+  font-size: 13px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.count {
+  font-size: 12px;
+  color: var(--dsw-alias-text-secondary);
+}
+
+.subsection {
+  padding: 8px 0;
+}
+
+.subsectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dsw-alias-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.tabBar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--dsw-alias-border-secondary);
+  margin-bottom: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab {
+  flex: none;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--dsw-alias-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab:hover {
+  color: var(--dsw-alias-text-primary);
+}
+
+.tabActive {
+  color: var(--dsw-alias-text-primary);
+  border-bottom-color: var(--dsw-alias-border-brand);
+}
+
+.agentId {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.agentId span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyBtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dsw-alias-text-tertiary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.copyBtn:hover {
+  background: var(--dsw-alias-bg-secondary);
+  color: var(--dsw-alias-text-primary);
+}
+
+.copyBtnCopied {
+  color: var(--dsw-alias-text-success);
+}

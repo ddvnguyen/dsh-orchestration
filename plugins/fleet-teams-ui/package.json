@@ -1,0 +1,16 @@
+{
+  "name": "@hydra/dsh-fleet-teams-ui",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 teams chat UI — a fleet-hosted rooms page (board-server pattern) that renders each room's chat thread (fleet/team-post events + the shared-room memory briefing) with sender name/avatar/role badges resolved from the fleet-agent profile registry, a grant-checked composer, and a team menu opening a team/room settings dialog (room name, members + grants read/post/join, memory file, scope, linked tasks, archive). Consumes ctx.fleetTeams / ctx.fleetAgent / the fleet-bus store; the dsh web app is never touched. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "fleet-teams-ui-server": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-host-webserver": "workspace:^"
+  }
+}

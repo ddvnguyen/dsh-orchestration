@@ -1,0 +1,16 @@
+{
+  "name": "@hydra/dsh-fleet-budget",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 fleet budget (cost tracking + scoped caps + soft warnings + escalation, owner decision #4) — per-identity / per-task-kind / global budgets with a soft-warning threshold (default 80% of the cap) that emits fleet/budget-warning and an escalation threshold (default 100%) that emits fleet/budget-escalated to the named owner. Durable SQLite store; the checkWake(agentId) scheduler-consult seam satisfies the fleet-supervisor's FleetBudgetLike interface (live wiring is a documented follow-up). Registers ctx.fleetBudget + the budget_set / budget_record / budget_status tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

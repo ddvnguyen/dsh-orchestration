@@ -1,0 +1,19 @@
+{
+  "name": "@hydra/dsh-fleet-settings",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: P4.4 fleet-settings — the companion /fleet-settings page on the fleet HTTP server (issue #26, orchestration-v3 §4.4). Sessions tab reads the dsh session ledger ($DSH_HOME/sessions, zstd JSONL) via the canonical JsonlSessionPersistence with per-log status (open turn = running) + title/updatedAt, with resume = the session.prompt RPC seam (POST /api/session.prompt, mode queue) and archive = the workspace.archiveSession RPC seam + a durable UI overlay marker. Fleet settings tabs: agents (fleet-agent profiles CRUD + enabled toggle), teams/rooms (fleet-teams members/grants/rooms), budgets (fleet-budget caps + status), policy (fleet-policy postures). The dsh settings dialog is NOT extensible (client-side slots in the read-only web bundle) so this companion page is the sanctioned settings surface. Served via ctx.webServer /fleet-settings* when composed + a standalone fleet-settings-server bin (port 3094).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "fleet-settings-server": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-host-webserver": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:^"
+  }
+}

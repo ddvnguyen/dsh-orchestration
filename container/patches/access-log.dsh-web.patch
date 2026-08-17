@@ -1,0 +1,93 @@
+diff --git a/packages/host/webserver/src/index.ts b/packages/host/webserver/src/index.ts
+index a6c335b8d5..d0dd5589f4 100644
+--- a/packages/host/webserver/src/index.ts
++++ b/packages/host/webserver/src/index.ts
+@@ -10,6 +10,7 @@
+ 
+ import { createServer } from 'node:http'
+ import type { IncomingMessage, ServerResponse, Server } from 'node:http'
++import { appendFile, mkdir } from 'node:fs/promises'
+ import type { AddressInfo } from 'node:net'
+ import type { Duplex } from 'node:stream'
+ import { Context, Service } from '@deepseek-ai/cordis'
+@@ -21,6 +22,72 @@ declare module '@deepseek-ai/cordis' {
+   }
+ }
+ 
++/** Access-log record: one JSONL line per completed HTTP request. */
++interface AccessLogEntry {
++  ts: string
++  svc: string
++  method: string
++  path: string
++  status: number
++  durMs: number
++  remote: string
++  host: string
++}
++
++/**
++ * Append one dsh-web access-log line to
++ * $DSH_HOME/fleet/logs/dsh-web.requests.jsonl (dir created on demand).
++ * Fire-and-forget and best-effort: a logging failure is swallowed so request
++ * routing never depends on the log write.
++ */
++function writeAccessLog(entry: AccessLogEntry): void {
++  const home = process.env.DSH_HOME
++  if (!home) return
++  const dir = `${home}/fleet/logs`
++  const line = `${JSON.stringify(entry)}\n`
++  void (async () => {
++    try {
++      await mkdir(dir, { recursive: true })
++      await appendFile(`${dir}/dsh-web.requests.jsonl`, line, 'utf8')
++    } catch {
++      // access logging is best-effort; routing must never depend on it
++    }
++  })()
++}
++
++/**
++ * Attach access-log tracing to one request/response pair. Logs exactly once:
++ * response finish emits the real status; a response error or an aborted
++ * connection emits status 0 (the request never completed).
++ */
++function traceAccess(req: IncomingMessage, res: ServerResponse): void {
++  const started = Date.now()
++  let logged = false
++  const emit = (status: number): void => {
++    if (logged) return
++    logged = true
++    let path = req.url ?? '/'
++    try {
++      path = new URL(path, 'http://x').pathname
++    } catch {
++      // keep the raw url when the request target is not URL-parseable
++    }
++    writeAccessLog({
++      ts: new Date().toISOString(),
++      svc: 'dsh-web',
++      method: req.method ?? 'GET',
++      path,
++      status,
++      durMs: Date.now() - started,
++      remote: req.socket.remoteAddress ?? '',
++      host: req.headers.host ?? '',
++    })
++  }
++  res.once('finish', () => emit(res.statusCode))
++  res.once('error', () => emit(0))
++  res.once('close', () => emit(0))
++}
++
+ /** Route match kind: 'exact' matches the pathname verbatim; 'prefix' p matches p and p/<anything>. */
+ export type WebRouteKind = 'exact' | 'prefix'
+ 
+@@ -168,6 +235,7 @@ export class WebServer extends Service {
+     // client dropping mid-body). Per-request failures log and answer 400 —
+     // never a process exit.
+     this.server = createServer((req, res) => {
++      traceAccess(req, res)
+       handle(req, res).catch((err: unknown) => {
+         this.ctx.logger.warn(err instanceof Error ? err : new Error(String(err)))
+         if (res.headersSent) {

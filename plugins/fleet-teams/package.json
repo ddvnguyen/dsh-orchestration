@@ -1,0 +1,16 @@
+{
+  "name": "@hydra/dsh-fleet-teams",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 social top layer (issue #26, orchestration-v3 §4 P4.1) — named teams + rooms + per-room grants + team_post + the shared-room memory file (claude_codex_bridge pattern, durable cross-agent context). A team ONLY CONNECTS agents to a team: membership + grants, nothing else (agent-specific config lives in fleet-agent, P4.3). Bus scope validation: a room scope resolves to a real room id; free-form scopes without a room are flagged/rejected per config (strictScopes). Room memory is a per-room durable markdown file under $DSH_HOME/fleet/teams/<room>.memory.md that survives restart; agents joining a room get the memory + recent room events. Every event publishes with originKind 'teams' (self-trigger guard), signed via ctx.fleetAgent when the actor has a profile. Registers ctx.fleetTeams + the team_create / team_join / team_leave / team_list / team_grants / room_create / room_join / room_leave / room_list / room_grants / team_post / room_memory / team_scope tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

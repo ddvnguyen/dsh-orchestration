@@ -1,0 +1,174 @@
+diff --git a/packages/client/ui-settings-general/src/client/SettingsRoot.module.css b/packages/client/ui-settings-general/src/client/SettingsRoot.module.css
+index 060e8d115b..fd0c49c218 100644
+--- a/packages/client/ui-settings-general/src/client/SettingsRoot.module.css
++++ b/packages/client/ui-settings-general/src/client/SettingsRoot.module.css
+@@ -1,7 +1,7 @@
+-/* Settings shell (figma 501:29904 mask context / 501:29947 panel): sidebar
+-   foot trigger row + centered 1080x700 modal panel. The trigger uses the
+-   sidebar's 34px compact row / 36px rail circle rhythm; the
+-   panel is a two-column layout — 188px nav rail + content column with a
++/* Settings shell: sidebar foot trigger row + panel layout.
++   Default (mobile/tablet): full-page panel, no mask or dialog chrome.
++   Desktop (>=768px): right-side slide-over panel with mask backdrop.
++   Panel is a two-column layout — 188px nav rail + content column with a
+    54px header and the 24px-padded options area. */
+ 
+ /* Trigger row: match the other wide sidebar controls' compact vertical rhythm. */
+@@ -46,41 +46,53 @@
+   white-space: nowrap;
+ }
+ 
+-/* Full-viewport layer (figma Mask 501:29946 #000@24%): mask tokens match the
+-   Modal primitive (--dsw-alias-bg-mask-1 + --dsw-mask-blur). */
++/* Full-viewport overlay layer. Default (mobile): full-page takeover with no
++   mask or backdrop. Desktop (>=768px): right-side slide-over panel — the
++   clickable area fills the remaining space beside the panel and acts as the
++   dismiss surface. */
+ .overlay {
+   position: fixed;
+   inset: 0;
+   z-index: 1000;
+   display: flex;
+-  align-items: center;
+-  justify-content: center;
++  flex-direction: row;
++  align-items: stretch;
++}
++
++/* Clickable dismiss area: fills the space left of the panel on desktop;
++   invisible on mobile where there is no mask backdrop. */
++.clickArea {
++  flex: 1;
++  min-width: 0;
++  cursor: default;
+ }
+ 
++/* Mask tokens match the Modal primitive (--dsw-alias-bg-mask-1 +
++   --dsw-mask-blur). Hidden on mobile (full-page, no backdrop). */
+ .mask {
+-  position: absolute;
++  position: fixed;
+   inset: 0;
+   background: var(--dsw-alias-bg-mask-1);
+   backdrop-filter: var(--dsw-mask-blur);
++  pointer-events: none;
++  display: none;
+ }
+ 
+-/* Panel (figma Settings 501:29947): r24, white, lv3 shadow (figma effects
+-   match --dsw-shadow-lv3 exactly); figma's 1080x700 is shrunk to 800 wide.
+-   One height for every section, taken from the viewport rather than the
+-   content: sections differ by hundreds of pixels (a settings list against the
+-   composition editor), and a content-sized panel would resize under the
+-   pointer on every nav click. Whatever does not fit scrolls in `.options`. */
++/* Panel: default is full-page (mobile/tablet). Desktop (>=768px) overrides to
++   right-side slide-over. One height for every section, taken from the viewport
++   rather than the content: sections differ by hundreds of pixels (a settings
++   list against the composition editor), and a content-sized panel would resize
++   under the pointer on every nav click. Whatever does not fit scrolls in
++   `.options`. */
+ .panel {
+   position: relative;
+   z-index: 1;
+   display: flex;
+-  width: 800px;
+-  height: min(800px, calc(100vh - 48px));
+-  max-width: calc(100vw - 48px);
+-  border-radius: 24px;
++  width: 100%;
++  height: 100%;
+   overflow: hidden;
+   background: var(--dsw-alias-bg-layer-2);
+-  box-shadow: var(--dsw-shadow-lv3);
++  box-shadow: none;
+   /* Elevated surface: the scrollbar thumb takes the l2 elevation tokens.
+      Declared on the panel rather than the scrolling `.options` child so the
+      elevation choice sits with the surface; the custom properties inherit
+@@ -90,6 +102,19 @@
+   --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+ }
+ 
++@media (min-width: 768px) {
++  .mask {
++    display: block;
++  }
++
++  .panel {
++    width: 480px;
++    height: 100%;
++    border-radius: 24px 0 0 24px;
++    box-shadow: var(--dsw-shadow-lv3);
++  }
++}
++
+ /* Nav rail (figma .Setting-nav 501:29958): 188 wide, pad (12,22,12,0),
+    gap 18, no own fill — the panel white shows through. */
+ .nav {
+diff --git a/packages/client/ui-settings-general/src/client/SettingsRoot.tsx b/packages/client/ui-settings-general/src/client/SettingsRoot.tsx
+index 762747500d..521e2fae67 100644
+--- a/packages/client/ui-settings-general/src/client/SettingsRoot.tsx
++++ b/packages/client/ui-settings-general/src/client/SettingsRoot.tsx
+@@ -1,14 +1,18 @@
+ /**
+- * Settings shell root: the sidebar-foot trigger row plus the centered modal
+- * panel (figma 501:29947, 1080x700) with the section nav rail. The shell is
+- * a pure composition face — every piece of text (trigger label, panel title,
+- * close label, sections) arrives from registrants through slots; accessible
+- * names resolve to that content (trigger: its own text; dialog:
+- * aria-labelledby the title node; close: visually-hidden slot text). Modal
+- * open state and the active section id are component-local viewing state;
+- * the onboarding coordinator mounts exactly one ordered registrant while the
+- * sessions-derived empty-Hero fact is active. Visible dialog chrome belongs
+- * to the step, so a mounted-but-deciding step paints nothing here.
++ * Settings shell root: the sidebar-foot trigger row plus the settings panel
++ * with the section nav rail. The shell is a pure composition face — every
++ * piece of text (trigger label, panel title, close label, sections) arrives
++ * from registrants through slots; accessible names resolve to that content
++ * (trigger: its own text; dialog: aria-labelledby the title node; close:
++ * visually-hidden slot text). Modal open state and the active section id are
++ * component-local viewing state; the onboarding coordinator mounts exactly
++ * one ordered registrant while the sessions-derived empty-Hero fact is
++ * active. Visible dialog chrome belongs to the step, so a mounted-but-deciding
++ * step paints nothing here.
++ *
++ * Layout: mobile/tablet (<768px) renders a full-page panel with no mask or
++ * dialog chrome. Desktop (>=768px) renders a right-side slide-over panel
++ * with a mask backdrop; clicking outside the panel closes it.
+  */
+ import { useCallback, useEffect, useId, useRef, useState } from 'react'
+ import clsx from 'clsx'
+@@ -36,9 +40,11 @@ type PanelProps = {
+ }
+ 
+ /**
+- * The modal layer: full-viewport mask + centered panel. Close paths: the
+- * header button, a mask click, and document-level Escape (mounted only while
+- * open, so the listener lifetime is the panel's).
++ * The panel layer: full-viewport overlay with a slide-over panel. On desktop
++ * (>=768px) a mask backdrop and clickable dismiss area sit beside the panel;
++ * on mobile the panel fills the viewport. Close paths: the header button,
++ * clicking outside the panel (desktop mask/clickArea), and document-level
++ * Escape (mounted only while open, so the listener lifetime is the panel's).
+  */
+ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelProps) {
+   // Entries can unmount underneath the requested id, so the render-time
+@@ -59,9 +65,16 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
+   useEffect(() => { closeButton.current?.focus() }, [])
+ 
+   return (
+-    <div className={css.overlay} role="presentation">
+-      <div className={css.mask} aria-hidden="true" onClick={onClose} />
+-      <div className={css.panel} role="dialog" aria-modal="true" aria-labelledby={titleId}>
++    <div className={css.overlay} role="presentation" onClick={onClose}>
++      <div className={css.mask} aria-hidden="true" />
++      <div className={css.clickArea} />
++      <div
++        className={css.panel}
++        role="dialog"
++        aria-modal="true"
++        aria-labelledby={titleId}
++        onClick={e => { e.stopPropagation() }}
++      >
+         <nav className={css.nav}>
+           <div className={css.navTitle} id={titleId}>{renderSlot('settings.header', {})}</div>
+           <div className={css.navList}>

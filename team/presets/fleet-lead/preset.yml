@@ -1,0 +1,3 @@
+name: Fleet Lead
+description: Fleet leader session — plan, delegate, supervise, gate. Carries the full fleet tool family (fleet-agent, fleet-teams, fleet-board, fleet-policy, fleet-budget) plus native subagent capability.
+order: 10

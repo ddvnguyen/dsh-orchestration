@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# fleet-up — bring up (or restart) the dsh fleet HOST services + exporter.
+#
+# Post-container migration (2026-08-17): the fleet runtime runs as native host
+# services under systemd --user, no container/volume:
+#   fleet-dsh.service      dsh web :3080 + fleet-board :3090 (fleet-supervisor.sh)
+#   fleet-exporter.service fleet metrics exporter :3091
+# Store: $HOME/.dsh (fleet/ + profiles/ + sessions/ + settings.yaml)
+#
+# Usage:  bin/fleet-up [--no-exporter]     (no --skip-build: no image to build)
+# Rollback: bin/fleet-down
+set -euo pipefail
+
+NO_EXPORTER=0
+for arg in "$@"; do
+  case "$arg" in
+    --no-exporter) NO_EXPORTER=1 ;;
+    *) echo "unknown arg: $arg" >&2; exit 2 ;;
+  esac
+done
+
+echo "[fleet-up] starting fleet-dsh.service (web :3080, board :3090)"
+systemctl --user daemon-reload >/dev/null 2>&1 || true
+systemctl --user enable fleet-dsh.service >/dev/null 2>&1 || true
+systemctl --user restart fleet-dsh.service
+
+echo "[fleet-up] waiting for :3080 (web) and :3090 (board)..."
+WEB_OK=000
+BOARD_OK=000
+for _ in $(seq 1 30); do
+  WEB_OK="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3080/ 2>/dev/null || true)"
+  BOARD_OK="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3090/health 2>/dev/null || true)"
+  [ "$WEB_OK" = "200" ] && [ "$BOARD_OK" = "200" ] && break
+  sleep 5
+done
+echo "[fleet-up] web / =$WEB_OK  board /health =$BOARD_OK"
+[ "$WEB_OK" = "200" ] && [ "$BOARD_OK" = "200" ] || { echo "FATAL: services did not come up" >&2; exit 1; }
+
+if [ "$NO_EXPORTER" = "0" ]; then
+  echo "[fleet-up] starting fleet-exporter.service (reading $HOME/.dsh/fleet/logs)"
+  systemctl --user enable fleet-exporter.service >/dev/null 2>&1 || true
+  systemctl --user restart fleet-exporter.service
+  sleep 3
+  echo "[fleet-up] exporter /metrics: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3091/metrics 2>/dev/null || echo n/a)"
+fi
+
+echo "[fleet-up] done. Web: http://127.0.0.1:3080  Board: http://127.0.0.1:3090  Metrics: http://127.0.0.1:3091/metrics  Store: $HOME/.dsh"

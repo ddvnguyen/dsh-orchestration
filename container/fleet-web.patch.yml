@@ -1,0 +1,64 @@
+# dsh-fleet web-profile composition overlay — HOST-PLANE ONLY
+# (dsh-fleet-container rebuild, 2026-08-17 leader-preset #26).
+#
+# Applied via `dsh web --patch <this>` so the fleet plugin family mounts INTO
+# the main dsh web UI at :3080: the fleet-admin page + profile API (/admin,
+# /api/agents), the teams rooms page + API (/fleet-teams-ui*), and the
+# fleet-board feed (/fleet-board*) — real routes, beating the SPA catch-all.
+#
+# This composition provides HOST-PLANE surfaces (webServer routes, registries)
+# AND agent-plane fleet tools (injectTools: true). Fleet tools are available
+# to all sessions; only fleet-preset sessions use them (persona + instructions
+# constrain usage). Presets provide persona + shell + delegation only.
+#
+# Resolved the same way the profile's own cordis.patch.yml would be (the
+# --patch overlays and the profile layer compose through the same loader
+# applyEntryPatches pipeline). Bare `@hydra/dsh-fleet-*` names resolve via
+# `$DSH_HOME/profiles/node_modules/@hydra/` (per-package symlinks the
+# entrypoint creates into /opt/dsh/experiments/dsh-fleet/plugins).
+- insert:
+    - id: fleet-agent
+      name: '@hydra/dsh-fleet-agent'
+      inject: ['webServer']
+      config:
+        home: !!js dshHomePath('')
+        autoRegisterAgents: false
+        injectTools: true
+
+    - id: fleet-teams
+      name: '@hydra/dsh-fleet-teams'
+      inject: []
+      config:
+        home: !!js dshHomePath('')
+        injectTools: true
+
+    - id: fleet-teams-ui
+      name: '@hydra/dsh-fleet-teams-ui'
+      inject: ['fleetTeams', 'webServer']
+      config:
+        home: !!js dshHomePath('')
+
+    - id: fleet-board
+      name: '@hydra/dsh-fleet-board'
+      inject: ['webServer']
+      config:
+        injectTools: true
+
+    - id: fleet-budget
+      name: '@hydra/dsh-fleet-budget'
+      inject: ['webServer']
+      config:
+        home: !!js dshHomePath('')
+        injectTools: true
+
+    - id: fleet-policy
+      name: '@hydra/dsh-fleet-policy'
+      inject: ['webServer']
+      config:
+        injectTools: true
+
+    - id: fleet-settings
+      name: '@hydra/dsh-fleet-settings'
+      inject: ['webServer', 'fleetAgent', 'fleetTeams', 'fleetBudget', 'fleetPolicy']
+      config:
+        home: !!js dshHomePath('')

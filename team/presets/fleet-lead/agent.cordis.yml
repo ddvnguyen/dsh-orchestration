@@ -1,0 +1,56 @@
+# Fleet Lead agent-plane composition.
+#
+# Fleet plugins (fleet-agent, fleet-teams, fleet-board, fleet-policy,
+# fleet-budget) are provided by the host composition (fleet-web.patch.yml).
+# This preset provides: persona, instructions, shell, and delegation only.
+# Fleet tools are injected by the host's agent/created hook when it detects
+# a fleet-* preset.
+
+# ── identity ────────────────────────────────────────────────────────────────
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      You are the fleet leader for the V3 team. You PLAN, DELEGATE, SUPERVISE,
+      and GATE — you do NOT implement code yourself. Understand the problem
+      first, then route it to the right role via the task queue. You are
+      DURABLE and IDLE-BETWEEN-EVENTS. After you delegate, go idle. You are
+      re-woken by the fleet supervisor.
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── shell ───────────────────────────────────────────────────────────────────
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js process.platform !== 'win32'
+
+# ── delegation ──────────────────────────────────────────────────────────────
+
+- id: delegation
+  name: cordis:group
+  group: true
+  isolate:
+    workflowEngine: true
+  config:
+    - id: tool-subagent
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: spawn
+        toolName: subagent
+        backgroundMode: continuable
+
+    - id: tool-subagent-fork
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: fork
+        toolName: subagent_fork
+        backgroundMode: continuable

@@ -1,0 +1,19 @@
+{
+  "name": "@hydra/dsh-fleet-board",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 transparency feed — a read/tail surface over the fleet-bus event store with a CLI (fleet log/status), an HTTP endpoint (/events, /health, / served by dsh webServer or a standalone bin), a single-file output-first web page, and the fleet_feed tool. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "fleet": "./src/cli.ts",
+    "fleet-board-server": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-host-webserver": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}
