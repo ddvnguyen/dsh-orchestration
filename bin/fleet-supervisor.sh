@@ -18,7 +18,7 @@ set -uo pipefail
 REPO=/mnt/WorkDisk/Workplace/llm-server-monitoring
 DSH_HOME="${DSH_HOME:-$HOME/.dsh}"
 HARNESS="$REPO/external/deepseek-harness"
-FLEET="$REPO/external/dsh-orchestration"
+FLEET=/mnt/WorkDisk/Workplace/dsh-orchestration
 SEED="$REPO/dsh-fleet-container"
 TSX="$HARNESS/node_modules/.bin/tsx"
 WEB_PORT="${FLEET_WEB_PORT:-3080}"
@@ -65,7 +65,7 @@ fi
 FALLBACK_NM="$DSH_HOME/profiles/node_modules"
 HYDRA_DIR="$FALLBACK_NM/@hydra"
 mkdir -p "$HYDRA_DIR"
-for plugin in fleet-agent fleet-teams fleet-teams-ui fleet-board; do
+for plugin in fleet-agent fleet-teams fleet-teams-ui fleet-board fleet-bus fleet-budget fleet-policy fleet-settings; do
   target="$FLEET/plugins/$plugin"
   if [ -d "$target" ]; then
     ln -sfn "$target" "$HYDRA_DIR/dsh-$plugin"
