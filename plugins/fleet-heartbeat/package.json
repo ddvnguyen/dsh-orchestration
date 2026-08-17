@@ -1,0 +1,14 @@
+{
+  "name": "@hydra/dsh-fleet-heartbeat",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: registers ctx.fleet — agent registry + per-agent heartbeat (lastSeen, status, stall detection), a 30 s tick timer, and fleet/event records (heartbeat, stall, resume) mirrored into dsh session logs. Issue #20.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

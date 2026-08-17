@@ -1,0 +1,44 @@
+{
+  "name": "@hydra/dsh-fleet",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype fleet plugin family for deepseek-harness (dsh): fleet-heartbeat (ctx.fleet registry + heartbeat/stall), fleet-mcp (stdio MCP server for any agent), fleet-inject (auto-expose fleet tools to agents), fleet-agent (profiles + signed events + agent config), fleet-bus (V3 event store + publish/subscribe/replay + followup/inject delivery), fleet-board (V3 transparency feed: CLI + HTTP + web page + fleet_feed), fleet-tasks (V3 flagship: shared task queue + org chart + heartbeat-wake claim + execution locks + artifact contracts), fleet-supervisor (V3 supervision: fleet-scheduler heartbeat-wake execution + takeover + orphan recovery + digests + ready-queue + silent-run watchdog + verification-gated merge queue), fleet-watchdog (V3 verification gate on stopped work: when every leaf of a watched task tree rests, verify the stop against evidence, reject false \"done\" — reopen + reassign), fleet-policy (V3 QM postures Strict/Auto/Dangerous + command policy hard denials: ctx.fleetPolicy.authorize refuses a denied action and publishes fleet/policy-denied with the rule + actor), fleet-budget (V3 cost tracking + scoped caps + soft warnings + escalation per owner decision #4: global/per-agent/per-task-kind budgets, fleet/budget-warning at the soft threshold and fleet/budget-escalated at the breach, with the checkWake(agentId) scheduler-consult seam). Issues #20, #26.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "../../external/deepseek-harness/node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "lint:inject": "../../external/deepseek-harness/node_modules/.bin/tsx scripts/check-inject.ts",
+    "test": "npm run lint:inject && ../../external/deepseek-harness/node_modules/.bin/tsx tests/registry-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/mcp-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/inject-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-claude-query-options.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-claude-registry-child.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/agent-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/bus-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/board-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/tasks-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/supervisor-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/watchdog-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/team-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-policy-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-budget-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-extras-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-teams-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/teams-ui-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-settings-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/composition-smoke.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/request-log-smoke.ts",
+    "test:registry": "../../external/deepseek-harness/node_modules/.bin/tsx tests/registry-smoke.ts",
+    "test:mcp": "../../external/deepseek-harness/node_modules/.bin/tsx tests/mcp-smoke.ts",
+    "test:inject": "../../external/deepseek-harness/node_modules/.bin/tsx tests/inject-smoke.ts",
+    "test:agent": "../../external/deepseek-harness/node_modules/.bin/tsx tests/agent-smoke.ts",
+    "test:bus": "../../external/deepseek-harness/node_modules/.bin/tsx tests/bus-smoke.ts",
+    "test:board": "../../external/deepseek-harness/node_modules/.bin/tsx tests/board-smoke.ts",
+    "test:tasks": "../../external/deepseek-harness/node_modules/.bin/tsx tests/tasks-smoke.ts",
+    "test:supervisor": "../../external/deepseek-harness/node_modules/.bin/tsx tests/supervisor-smoke.ts",
+    "test:watchdog": "../../external/deepseek-harness/node_modules/.bin/tsx tests/watchdog-smoke.ts",
+    "test:team": "../../external/deepseek-harness/node_modules/.bin/tsx tests/team-smoke.ts",
+    "test:policy": "../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-policy-smoke.ts",
+    "test:budget": "../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-budget-smoke.ts",
+    "test:extras": "../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-extras-smoke.ts",
+    "test:teams": "../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-teams-smoke.ts",
+    "test:teams-ui": "../../external/deepseek-harness/node_modules/.bin/tsx tests/teams-ui-smoke.ts",
+    "test:settings": "../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-settings-smoke.ts",
+    "test:composition": "../../external/deepseek-harness/node_modules/.bin/tsx tests/composition-smoke.ts",
+    "test:reqlog": "../../external/deepseek-harness/node_modules/.bin/tsx tests/request-log-smoke.ts",
+    "team:bootstrap": "../../external/deepseek-harness/node_modules/.bin/tsx team/bootstrap.ts",
+    "test:fleet-claude": "../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-claude-query-options.ts && ../../external/deepseek-harness/node_modules/.bin/tsx tests/fleet-claude-registry-child.ts",
+    "mcp:standalone": "../../external/deepseek-harness/node_modules/.bin/tsx plugins/fleet-mcp/src/bin.ts",
+    "test:e2e": "bash scripts/live-e2e-run.sh"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@deepseek-ai/dsh-llm": "workspace:^"
+  }
+}

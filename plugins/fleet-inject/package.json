@@ -1,0 +1,16 @@
+{
+  "name": "@hydra/dsh-fleet-inject",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: auto-injects fleet tools (list/get_status/send_message/wait_for_agent) into in-process dsh agents via agent.ctx.tools on agent/created, and documents the ACP mcpServers seam for out-of-process children. Issue #20.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

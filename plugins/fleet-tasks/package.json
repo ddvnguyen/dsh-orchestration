@@ -1,0 +1,18 @@
+{
+  "name": "@hydra/dsh-fleet-tasks",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 flagship — a shared task queue (create/claim/complete/cancel/escalate/accept) with goal ancestry (#28), a fixed workflow-state taxonomy (Triage/Backlog/Unstarted/Started/Completed/Cancelled, #28), single-assignee atomic claims with execution locks, severity-routed escalation (P0/P1/P2 + owner + nextAction, #28), artifact contracts with false-done rejection, and the heartbeat-wake claim seam (claimWake) for the fleet-scheduler. Registers ctx.fleetTasks + the task_create / task_list / task_claim / task_complete / task_escalate / task_accept tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-llm": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

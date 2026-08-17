@@ -1,0 +1,18 @@
+{
+  "name": "@hydra/dsh-fleet-bus",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 event foundation — a fleet-level event store (publish/subscribe/replay) with delivery to agents via agent.followup (wake) / agent.inject (quiet inbox). Registers ctx.fleetBus + the fleet_publish / fleet_subscribe / fleet_unsubscribe / fleet_events tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-llm": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

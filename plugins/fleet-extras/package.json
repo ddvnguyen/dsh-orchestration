@@ -1,0 +1,15 @@
+{
+  "name": "@hydra/dsh-fleet-extras",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 hcom borrow (issue #26, orchestration-v3 §4 P3.3) — workspace watch + subscribe + 30 s collision detection. Agents register watch intent over explicit paths; a polling scanner (zero deps, scan() driven) detects workspace changes (fleet/workspace-change); two DIFFERENT actors writing the SAME file within the collision window (default 30 s) fire fleet/collision with the actors, the file, and the window — the shared-worktree protection pattern. Every event publishes with originKind 'extras' (self-trigger guard), signed via fleet-agent when available. Registers ctx.fleetExtras + the extras_watch / extras_subscribe / extras_collisions tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

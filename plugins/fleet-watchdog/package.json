@@ -1,0 +1,15 @@
+{
+  "name": "@hydra/dsh-fleet-watchdog",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 verification gate on stopped work (issue #26, orchestration-v3 §4 P2.4, #28 — paperclip Task Watchdog). When every leaf of a watched task tree rests, the watchdog verifies the stop against evidence (artifact contract present? evidence non-empty? metric in passRange?) — verification-shaped, no LLM. It rejects false 'done': reopens the leaf, creates a marked review task, and reassigns it via org-chart role routing to restore a live path. Stop-fingerprint reuse (bus dedupe semantics) suppresses re-verification on identical stopped state within a window; every event publishes with originKind 'watchdog' (self-trigger guard). Registers ctx.fleetWatchdog + the watchdog_watch / watchdog_verify / watchdog_status tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

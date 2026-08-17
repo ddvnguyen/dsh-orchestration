@@ -1,0 +1,17 @@
+{
+  "name": "@hydra/dsh-fleet-supervisor",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: the V3 fleet supervisor — fleet timers (30 s heartbeat tick), the fleet-scheduler (durable wake queue with coalescing / budget checks / workspace resolution / skill loading / agent.followup wake), takeover on stall, orphan recovery, the silent active-run watchdog (#28), periodic fleet digests, the ready-queue rollup, and the verification-gated merge queue (#28). Registers ctx.fleetSupervisor + the fleet_wake / fleet_queue_status / fleet_digest_now / fleet_merge_enqueue / fleet_merge_status tools. Issue #26.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-llm": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-skill": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

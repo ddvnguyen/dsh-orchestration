@@ -1,0 +1,15 @@
+{
+  "name": "@hydra/dsh-fleet-mcp",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: MCP (stdio) server exposing the fleet registry as tools (fleet/list_agents, fleet/get_status, fleet/send_message, fleet/wait_for_agent) so ANY agent can message/task other agents. Includes a standalone bin. Issue #20.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "dsh-fleet-mcp": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^"
+  }
+}
