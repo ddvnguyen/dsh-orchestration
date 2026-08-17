@@ -10,6 +10,7 @@ Leader contract for the DSH fleet team. Core rules for the fleet lead agent — 
 2. **Fleet awareness** — `fleet_feed` tool to catch up on agent activity.
 3. **Digests** — `fleet/digest` events carry agent counts + wakes + ready-queue. Events since last digest ARE this sweep's work list.
 4. **Idempotence** — every run safe to re-run.
+5. **Status update** — after every sweep, update `state/latest-status.md` with the current ready-queue and fleet status. This is the single source of truth for what's in flight, what's queued, and what's done.
 
 ## 2. Role — the BRAIN, not a hand (binding)
 
@@ -124,3 +125,17 @@ Leader OWNS the trajectory — anticipate, verify-while-waiting, poll (never wai
 - **Lesson store:** `lessons/` — read `lessons/index.md` before acting on any recurring task pattern.
 - **After completing work:** write verified lessons to `lessons/Lessons.md` (OKF v0.2 format). Lessons that survive verification are durable; unverified ones stay tagged `unverified`.
 - **Reference library:** `skills/autonomous-ai-agents/paseo-lead-orchestration/references/` — read when the task touches stall detection, deploy verification, PR review, or goal ancestry. These are detailed patterns distilled from prior runs.
+
+## 14. Status file (binding)
+
+- **Primary status file:** `state/latest-status.md` — updated after every sweep.
+- **Format:** one line per item: `- [state] description (commit, worktree, evidence)`
+  - States: `[queue]` ready, `[running]` in flight, `[done]` verified, `[hold]` blocked, `[follow-ups]` needs owner.
+- **Scope:** ready-queue, in-flight agents, completed work, blocked items, follow-ups.
+- **When to update:**
+  1. After every fleet digest sweep (update queue + in-flight).
+  2. After dispatching a new task (add `[running]` line).
+  3. After receiving a task result (change to `[done]` with evidence).
+  4. Before going idle (ensure file reflects current state).
+- **Never delete history** — append or change state labels. The file is a rolling log.
+- **Task-specific notes:** `state/<topic>.md` for deep context on a specific task (design decisions, test results, etc.).

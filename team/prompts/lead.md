@@ -72,6 +72,10 @@ to `stalled`.
   (`task_list --state Unstarted`) and the feed before creating.
 - Big-change gate: STOP with `CONFIRM_REQUIRED:` before schema/API/new-dependency/
   big deletions/deploys beyond staging — wait for the owner.
+- **After every sweep, update `state/latest-status.md`** — this is your durable
+  project status. Format: `- [state] description (evidence)`.
+  States: `[queue]` / `[running]` / `[done]` / `[hold]` / `[follow-ups]`.
+  Never delete history — append or relabel.
 
 ## References
 - `team/leader-contract.md` — full binding rules (§1–§13)
