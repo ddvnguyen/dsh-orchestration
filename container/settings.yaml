@@ -1,8 +1,9 @@
-# dsh fleet settings — seed template (copied to $DSH_HOME/settings.yaml on first start)
+# dsh fleet settings — PROD on ddv-server
+# Seeded into $DSH_HOME/settings.yaml on first start (never overwritten).
 # NO secrets in this file: tokens are wired via apiKeyEnv → runtime env.
 #
 # Providers:
-#   opencode-go  — paid subscription (deepseek-v4-flash, mimo-v2.5)
+#   opencode-go  — paid subscription (deepseek-v4-flash, mimo-v2.5, + 24 more)
 #   opencode-zen — zen free tier (deepseek-v4-flash-free, mimo-v2.5-free, hy3-free)
 #   local-llama  — host llama.cpp fallback (127.0.0.1:8080)
 
@@ -11,7 +12,7 @@ llm-pi-ai:
     opencode-go:
       displayName: opencode-go
       api: openai-completions
-      baseURL: https://go.opencode.ai/v1
+      baseURL: https://opencode.ai/zen/go/v1
       apiKeyEnv: OPENCODE_GO_KEY
       compat:
         thinkingFormat: deepseek
@@ -20,8 +21,32 @@ llm-pi-ai:
           name: DeepSeek V4 Flash
           contextWindow: 1000000
           maxTokens: 384000
+        - id: deepseek-v4-pro
+          name: DeepSeek V4 Pro
+          contextWindow: 1000000
+          maxTokens: 384000
         - id: mimo-v2.5
           name: MiMo V2.5
+          contextWindow: 1000000
+          maxTokens: 384000
+        - id: mimo-v2-pro
+          name: MiMo V2 Pro
+          contextWindow: 1000000
+          maxTokens: 384000
+        - id: mimo-v2.5-pro
+          name: MiMo V2.5 Pro
+          contextWindow: 1000000
+          maxTokens: 384000
+        - id: qwen3.7-plus
+          name: Qwen 3.7 Plus
+          contextWindow: 1000000
+          maxTokens: 384000
+        - id: qwen3.7-max
+          name: Qwen 3.7 Max
+          contextWindow: 1000000
+          maxTokens: 384000
+        - id: hy3
+          name: Hy3
           contextWindow: 1000000
           maxTokens: 384000
     opencode-zen:
