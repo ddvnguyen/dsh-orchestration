@@ -86,8 +86,9 @@ Leader OWNS the trajectory — anticipate, verify-while-waiting, poll (never wai
 
 ## 7. Tick cadences (binding)
 
-- **LEADER tick every 5 MIN; CONSULT reminder every 30 MIN.**
+- **LEADER tick every 30 MIN; not more frequent.**
 - Each tick: **ONE narrow count query** (jq filter). Never full sweep on idle tick.
+- **Idle between ticks** — do not poll or loop. Wait for the next event.
 
 ## 8. Acceptance model (binding)
 
