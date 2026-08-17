@@ -1,0 +1,69 @@
+# dsh fleet settings — seed template (copied to $DSH_HOME/settings.yaml on first start)
+# NO secrets in this file: tokens are wired via apiKeyEnv → runtime env.
+#
+# Providers:
+#   opencode-go  — paid subscription (deepseek-v4-flash, mimo-v2.5)
+#   opencode-zen — zen free tier (deepseek-v4-flash-free, mimo-v2.5-free, hy3-free)
+#   local-llama  — host llama.cpp fallback (127.0.0.1:8080)
+
+llm-pi-ai:
+  providers:
+    opencode-go:
+      displayName: opencode-go
+      api: openai-completions
+      baseURL: https://go.opencode.ai/v1
+      apiKeyEnv: OPENCODE_GO_KEY
+      compat:
+        thinkingFormat: deepseek
+      models:
+        - id: deepseek-v4-flash
+          name: DeepSeek V4 Flash
+          contextWindow: 1000000
+          maxTokens: 384000
+        - id: mimo-v2.5
+          name: MiMo V2.5
+          contextWindow: 1000000
+          maxTokens: 384000
+    opencode-zen:
+      displayName: opencode-zen
+      api: openai-completions
+      baseURL: https://opencode.ai/zen/v1
+      apiKeyEnv: OPENCODE_ZEN_KEY
+      compat:
+        thinkingFormat: deepseek
+      models:
+        - id: deepseek-v4-flash-free
+          name: DeepSeek V4 Flash Free
+          contextWindow: 200000
+          maxTokens: 8192
+        - id: hy3-free
+          name: Hy3 Free
+          contextWindow: 200000
+          maxTokens: 8192
+        - id: mimo-v2.5-free
+          name: Mimo v2.5 (zen free)
+          contextWindow: 200000
+          maxTokens: 8192
+    local-llama:
+      displayName: Local llama.cpp (eval fallback)
+      api: openai-completions
+      baseURL: http://127.0.0.1:8080/v1
+      headers:
+        authorization: Bearer unused
+      compat:
+        thinkingFormat: deepseek
+      reasoning: off
+      models:
+        - id: Qwopus3.6-35B-A3B-v1-APEX-I-Mini.gguf
+          name: Qwopus APEX I Mini (local)
+          contextWindow: 32768
+          maxTokens: 512
+agent-default-model:
+  provider: opencode-go
+  model: deepseek-v4-flash
+permission:
+  defaultPreset: danger-full-access
+agent-presets:
+  default: standard
+ui-onboarding:
+  welcomeNoticeVersion: 2026-08-13.1

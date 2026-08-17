@@ -31,11 +31,9 @@ BOARD_PORT="${FLEET_BOARD_PORT:-3090}"
 # via FLEET_WEB_TRUSTED_HOSTS.
 FLEET_WEB_TRUSTED_HOSTS="${FLEET_WEB_TRUSTED_HOSTS:-harness.ddvnguyen.com 100.127.245.31}"
 
-# runtime LLM credential: settings.yaml references apiKeyEnv OPENCODE_ZEN_KEY
-# (provider route opencode-zen). Resolve it from the opencode auth store at
-# start if the env var is not already set (this replaced the container's .env
-# wiring). Fails loudly only when a turn actually needs the provider — dsh web
-# keeps serving config/UI without it.
+# Runtime LLM credentials: settings.yaml references apiKeyEnv for provider routes.
+# Resolve from the opencode auth store if not already set. Fails loudly only
+# when a turn actually needs the provider — dsh web keeps serving config/UI.
 if [ -z "${OPENCODE_ZEN_KEY:-}" ] && [ -f "$HOME/.local/share/opencode/auth.json" ]; then
   OPENCODE_ZEN_KEY="$(python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/.local/share/opencode/auth.json')))['opencode']['key'])" 2>/dev/null || true)"
   if [ -n "$OPENCODE_ZEN_KEY" ]; then
@@ -46,6 +44,18 @@ if [ -z "${OPENCODE_ZEN_KEY:-}" ] && [ -f "$HOME/.local/share/opencode/auth.json
   fi
 else
   export OPENCODE_ZEN_KEY="${OPENCODE_ZEN_KEY:-}"
+fi
+
+if [ -z "${OPENCODE_GO_KEY:-}" ] && [ -f "$HOME/.local/share/opencode/auth.json" ]; then
+  OPENCODE_GO_KEY="$(python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/.local/share/opencode/auth.json')))['opencode-go']['key'])" 2>/dev/null || true)"
+  if [ -n "$OPENCODE_GO_KEY" ]; then
+    export OPENCODE_GO_KEY
+    echo "[fleet] OPENCODE_GO_KEY resolved from opencode auth store"
+  else
+    echo "[fleet] WARN: OPENCODE_GO_KEY not resolved (auth.json key missing)" >&2
+  fi
+else
+  export OPENCODE_GO_KEY="${OPENCODE_GO_KEY:-}"
 fi
 
 mkdir -p "$DSH_HOME"
