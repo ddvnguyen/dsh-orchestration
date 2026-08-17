@@ -1,0 +1,4 @@
+[submodule "external/deepseek-harness"]
+	path = external/deepseek-harness
+	url = https://github.com/ddvnguyen/deepseek-harness.git
+	branch = dsh-orchestration
