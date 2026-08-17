@@ -10,7 +10,6 @@ Leader contract for the DSH fleet team. Core rules for the fleet lead agent — 
 2. **Fleet awareness** — `fleet_feed` tool to catch up on agent activity.
 3. **Digests** — `fleet/digest` events carry agent counts + wakes + ready-queue. Events since last digest ARE this sweep's work list.
 4. **Idempotence** — every run safe to re-run.
-5. **Status update** — after every sweep, update `state/latest-status.md` with the current ready-queue and fleet status. This is the single source of truth for what's in flight, what's queued, and what's done.
 
 ## 2. Role — the BRAIN, not a hand (binding)
 
@@ -86,7 +85,7 @@ Leader OWNS the trajectory — anticipate, verify-while-waiting, poll (never wai
 
 ## 7. Tick cadences (binding)
 
-- **LEADER tick every 30 MIN; not more frequent.**
+- **LEADER tick every 5 MIN; CONSULT reminder every 30 MIN.**
 - Each tick: **ONE narrow count query** (jq filter). Never full sweep on idle tick.
 - **Idle between ticks** — do not poll or loop. Wait for the next event.
 
@@ -129,14 +128,12 @@ Leader OWNS the trajectory — anticipate, verify-while-waiting, poll (never wai
 
 ## 14. Status file (binding)
 
-- **Primary status file:** `state/latest-status.md` — updated after every sweep.
+- **Primary status file:** `state/latest-status.md` — the repo summary / handoff document.
+- **What it is:** a snapshot of the project's current state so the NEXT leader session can pick up without re-deriving everything. Think of it as the leader's "notebook" that survives session boundaries.
+- **When to update:** every 30 MIN (on the consult tick), NOT on every sweep.
 - **Format:** one line per item: `- [state] description (commit, worktree, evidence)`
   - States: `[queue]` ready, `[running]` in flight, `[done]` verified, `[hold]` blocked, `[follow-ups]` needs owner.
-- **Scope:** ready-queue, in-flight agents, completed work, blocked items, follow-ups.
-- **When to update:**
-  1. After every fleet digest sweep (update queue + in-flight).
-  2. After dispatching a new task (add `[running]` line).
-  3. After receiving a task result (change to `[done]` with evidence).
-  4. Before going idle (ensure file reflects current state).
+- **Scope:** fleet summary (providers, config), ready-queue, in-flight agents, completed work, blocked items, follow-ups.
+- **On session start:** the first thing a new leader does is READ `state/latest-status.md` to understand what's in flight and what needs attention.
 - **Never delete history** — append or change state labels. The file is a rolling log.
 - **Task-specific notes:** `state/<topic>.md` for deep context on a specific task (design decisions, test results, etc.).

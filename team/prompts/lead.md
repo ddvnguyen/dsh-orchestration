@@ -72,9 +72,10 @@ to `stalled`.
   (`task_list --state Unstarted`) and the feed before creating.
 - Big-change gate: STOP with `CONFIRM_REQUIRED:` before schema/API/new-dependency/
   big deletions/deploys beyond staging — wait for the owner.
-- **After every sweep, update `state/latest-status.md`** — this is your durable
-  project status. Format: `- [state] description (evidence)`.
-  States: `[queue]` / `[running]` / `[done]` / `[hold]` / `[follow-ups]`.
+- **Status file (`state/latest-status.md`):** the repo summary / handoff doc.
+  On session start — READ IT FIRST to understand what's in flight.
+  On consult tick (every 30 min) — UPDATE IT with current state.
+  Format: `- [state] description (evidence)`. States: `[queue]`/`[running]`/`[done]`/`[hold]`/`[follow-ups]`.
   Never delete history — append or relabel.
 
 ## References
