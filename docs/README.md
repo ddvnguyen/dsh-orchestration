@@ -7,8 +7,9 @@ Fleet orchestration on deepseek-harness (DSH). Everything DSH-native — plugins
 | Doc | What it covers |
 |---|---|
 | [v3-design.md](v3-design.md) | V3 architecture, plugin inventory, phases |
-| [plugin-inventory.md](plugin-inventory.md) | All 16 fleet plugins — status, ports, acceptance |
+| [plugin-inventory.md](plugin-inventory.md) | All 18 fleet plugins — status, ports, acceptance |
 | [orchestration-setup.md](orchestration-setup.md) | How to set up and run the fleet on a host |
+| [deploy-prod.md](deploy-prod.md) | Step-by-step production deploy on ddv-server |
 
 ## Key files
 

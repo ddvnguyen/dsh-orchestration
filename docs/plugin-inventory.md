@@ -1,6 +1,6 @@
-# Plugin Inventory — all 16 fleet plugins
+# Plugin Inventory — all 18 fleet plugins
 
-## ENABLED — composed into :3080 web profile (8)
+## ENABLED — composed into :3080 web profile (9)
 
 | # | Plugin | Port | Acceptance |
 |---|---|---|---|
@@ -12,8 +12,9 @@
 | 6 | fleet-budget | — | cost tracking + scoped caps + soft warnings + escalation |
 | 7 | fleet-policy | — | Strict/Auto/Dangerous postures + hard denials |
 | 8 | fleet-settings | 3094 | sessions + fleet settings page |
+| 9 | ui-fleet-settings | — | client-side fleet settings in DSH dialog |
 
-## STANDALONE-ONLY — own bin/port or headless team plane (7)
+## STANDALONE-ONLY — own bin/port or headless team plane (8)
 
 | # | Plugin | Notes |
 |---|---|---|
@@ -24,12 +25,13 @@
 | 13 | fleet-tasks | SQLite task queue (service, no UI) |
 | 14 | fleet-supervisor | scheduler/wake/supervision engine (headless) |
 | 15 | fleet-watchdog | verification gate on stopped work (headless) |
+| 16 | fleet-agent-provider | DSH-native agent spawning with worktree isolation (Phase 1 MVP) |
 
 ## DISABLED (1)
 
 | # | Plugin | Rationale |
 |---|---|---|
-| 16 | fleet-extras | hcom watch/subscribe/collision — no live consumer yet |
+| 17 | fleet-extras | hcom watch/subscribe/collision — no live consumer yet |
 
 ## Ports
 
@@ -44,4 +46,4 @@
 
 ## Test evidence
 
-`npm test` from `experiments/dsh-fleet/` — **20/20 suites PASS, exit 0** (~8 s).
+`npm test` from `dsh-orchestration/` — **20/20 suites PASS, exit 0** (~8 s).
