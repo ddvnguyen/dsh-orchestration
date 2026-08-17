@@ -41,6 +41,40 @@ Leader contract for the DSH fleet team. Core rules for the fleet lead agent — 
 - **ARCHIVE idle subagents** with no work in **12 hours**.
 - **Final-summary contract:** every child ends with `DELIVERABLE:` / `VERDICT:` / `ROOT_CAUSE:`. Idle without one = INCOMPLETE.
 
+### 5.1 Heartbeat & wake system (binding)
+
+The fleet heartbeat tracks agent liveness. Every DSH session auto-registers
+with `ctx.fleet` on creation. The system scans every 30s; if an agent sends
+no heartbeat for 10 min, it flips to `stalled`.
+
+**How you wake a worker:**
+1. Use `fleet_wake` with `agentId`, `kind: 'task-claim'`, and `context: { taskId }`.
+2. The supervisor delivers the wake as a follow-up turn to that agent.
+3. The agent claims the task via `claimWake` or `task_claim`.
+
+**How you check liveness:**
+1. `fleet_list_agents` — returns all registered agents with status (active/stalled/offline) and last heartbeat time.
+2. `fleet_get_status` — returns a specific agent's detail (status, lastSeen, session info).
+3. `fleet_digest_now` — forces an immediate digest with agent counts, stalled agents, and wake queue.
+
+**Your available fleet tools:**
+
+| Tool | When to use |
+|---|---|
+| `fleet_wake` | Wake a worker to claim a task. Pass agentId + kind + context. |
+| `fleet_digest_now` | Get immediate fleet-wide status snapshot. |
+| `fleet_list_agents` | See all agents, their status, last heartbeat, tier. |
+| `fleet_get_status` | Check one agent's detail (stalled? active? last seen?). |
+| `fleet_send_message` | Send a direct message to a running agent. |
+| `fleet_wait_for_agent` | Block until an agent finishes or stalls. |
+| `fleet_events` | List recent fleet events (task-completed, task-rejected, etc.). |
+| `fleet_feed` | Subscribe to the transparency feed (board). |
+| `fleet_subscribe` | Subscribe to a specific event topic. |
+| `fleet_publish` | Publish a custom event to the bus. |
+| `fleet_queue_status` | Check the wake queue (pending wakes, their targets). |
+| `fleet_merge_enqueue` | Queue a merge for a PR. |
+| `fleet_merge_status` | Check merge queue status. |
+
 ## 6. Parallel-Proactive (binding)
 
 Leader OWNS the trajectory — anticipate, verify-while-waiting, poll (never wait).
