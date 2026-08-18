@@ -68,22 +68,77 @@ else
   echo "[fleet] keeping existing $DSH_HOME/settings.yaml"
 fi
 
-# 1b) @hydra fleet plugin packages resolvable from any dsh profile: per-package
-#     symlinks in the flat fallback $DSH_HOME/profiles/node_modules/ (the same
-#     dir healProfilesModuleFallback manages for the app closure — our links are
-#     additive, so healing never removes them).
+# 1b) @hydra fleet plugin packages resolvable from any dsh profile
+#
+# MODE: symlink (default) or copy
+#   - FLEET_PLUGIN_MODE=symlink: fast, live updates, but source-dependent
+#   - FLEET_PLUGIN_MODE=copy: isolated, safer for prod, but requires re-copy on change
+#
 FALLBACK_NM="$DSH_HOME/profiles/node_modules"
 HYDRA_DIR="$FALLBACK_NM/@hydra"
+PLUGIN_MODE="${FLEET_PLUGIN_MODE:-symlink}"
 mkdir -p "$HYDRA_DIR"
-for plugin in fleet-agent fleet-teams fleet-teams-ui fleet-board fleet-bus fleet-budget fleet-policy fleet-settings fleet-github; do
-  target="$FLEET/plugins/$plugin"
-  if [ -d "$target" ]; then
-    ln -sfn "$target" "$HYDRA_DIR/dsh-$plugin"
-  else
-    echo "[fleet] WARN: plugin dir missing: $target" >&2
+
+# All known fleet plugins
+ALL_PLUGINS="fleet-agent fleet-teams fleet-teams-ui fleet-board fleet-bus fleet-budget fleet-policy fleet-settings fleet-schedule fleet-github fleet-searxng"
+
+# Phase 1: Remove stale entries (plugins that no longer exist)
+for existing in "$HYDRA_DIR"/dsh-*; do
+  [ -e "$existing" ] || continue
+  existing_name="${existing##*/dsh-}"
+  # Check if this plugin is in our known list
+  if ! echo "$ALL_PLUGINS" | grep -qw "$existing_name"; then
+    echo "[fleet] cleanup: removing stale plugin entry: $existing_name"
+    rm -rf "$existing"
   fi
 done
-echo "[fleet] @hydra symlinks: $(ls "$HYDRA_DIR" 2>/dev/null | tr '\n' ' ')"
+
+# Phase 2: Create/update plugin entries
+for plugin in $ALL_PLUGINS; do
+  target="$FLEET/plugins/$plugin"
+  link="$HYDRA_DIR/dsh-$plugin"
+  
+  if [ ! -d "$target" ]; then
+    echo "[fleet] WARN: plugin dir missing: $target" >&2
+    continue
+  fi
+  
+  case "$PLUGIN_MODE" in
+    symlink)
+      # Remove existing entry (file or dir) before creating symlink
+      [ -e "$link" ] && rm -rf "$link"
+      ln -sfn "$target" "$link"
+      ;;
+    copy)
+      # Only copy if target is newer or link doesn't exist
+      if [ ! -d "$link" ] || [ "$target" -nt "$link" ]; then
+        echo "[fleet] copying: $plugin"
+        rm -rf "$link"
+        cp -a "$target" "$link"
+      fi
+      ;;
+    *)
+      echo "[fleet] ERROR: unknown FLEET_PLUGIN_MODE: $PLUGIN_MODE" >&2
+      exit 1
+      ;;
+  esac
+done
+
+# Phase 3: Validate all entries
+VALID=0
+INVALID=0
+for entry in "$HYDRA_DIR"/dsh-*; do
+  [ -e "$entry" ] || continue
+  if [ -d "$entry" ] && [ -f "$entry/package.json" ]; then
+    VALID=$((VALID + 1))
+  else
+    echo "[fleet] WARN: invalid plugin entry: $entry" >&2
+    INVALID=$((INVALID + 1))
+  fi
+done
+
+echo "[fleet] @hydra plugins ($PLUGIN_MODE): $VALID valid, $INVALID invalid"
+echo "[fleet] @hydra plugins: $(ls "$HYDRA_DIR" 2>/dev/null | tr '\n' ' ')"
 
 # 2) V3 team bootstrap (idempotent)
 echo "[fleet] running team bootstrap (FLEET_TEAM_HOME=$DSH_HOME)"

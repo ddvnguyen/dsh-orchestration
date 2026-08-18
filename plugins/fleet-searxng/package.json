@@ -1,0 +1,15 @@
+{
+  "name": "@hydra/dsh-fleet-searxng",
+  "version": "0.1.0",
+  "description": "DSH plugin: wraps SearXNG metasearch engine as a model-facing web_search tool via HTTP API.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./src/*": "./src/*"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:*",
+    "@deepseek-ai/dsh-tools": "workspace:*",
+    "@deepseek-ai/schemastery": "workspace:*"
+  }
+}
