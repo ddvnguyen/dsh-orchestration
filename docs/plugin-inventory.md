@@ -1,10 +1,10 @@
-# Plugin Inventory — all 18 fleet plugins
+# Plugin Inventory — all 19 fleet plugins
 
 ## ENABLED — composed into :3080 web profile (9)
 
 | # | Plugin | Port | Acceptance |
 |---|---|---|---|
-| 1 | fleet-agent | 3093 (admin) | agent identity + `/admin` + `/api/agents` + 8 tools |
+| 1 | fleet-agent | 3093 (admin) | agent identity + `/admin` + `/api/agents` + 15 tools (8 admin + 7 heartbeat) |
 | 2 | fleet-teams | — | teams + rooms + grants + team_post + room memory |
 | 3 | fleet-teams-ui | 3092 | rooms chat UI + sender identity + team settings dialog |
 | 4 | fleet-board | 3090 | transparency feed: CLI + HTTP + page + fleet_feed tool |
@@ -26,12 +26,13 @@
 | 14 | fleet-supervisor | scheduler/wake/supervision engine (headless) |
 | 15 | fleet-watchdog | verification gate on stopped work (headless) |
 | 16 | fleet-agent-provider | DSH-native agent spawning with worktree isolation (Phase 1 MVP) |
+| 17 | fleet-schedule | JSON schedule store (`schedules.json`) + 1 s tick + `fleet_heartbeat_*` tool surface (service, no UI) |
 
 ## DISABLED (1)
 
 | # | Plugin | Rationale |
 |---|---|---|
-| 17 | fleet-extras | hcom watch/subscribe/collision — no live consumer yet |
+| 18 | fleet-extras | hcom watch/subscribe/collision — no live consumer yet |
 
 ## Ports
 
@@ -46,4 +47,6 @@
 
 ## Test evidence
 
-`npm test` from `dsh-orchestration/` — **20/20 suites PASS, exit 0** (~8 s).
+`npm test` from `dsh-orchestration/` — **20/21 suites PASS** (~8 s; schedule-smoke added).
+Pre-existing, unrelated: `mcp-smoke` spawns a hardcoded `../../external/deepseek-harness/node_modules/.bin/tsx`
+path that does not exist in this worktree (test bug, present in HEAD — not caused by the schedule work).

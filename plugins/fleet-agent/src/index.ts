@@ -34,7 +34,7 @@ import type { JsonValue } from '@deepseek-ai/dsh-session'
 import type { WebServer } from '@deepseek-ai/dsh-host-webserver'
 import { join } from 'node:path'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
-import type {} from '../../../src/types.ts'
+import type { ScheduleCadence, ScheduleRecord } from '../../../src/types.ts'
 import { getRosterProfile } from '../../../team/roster.ts'
 import { FleetAgentService, type FleetSignedEvent, type FleetAgentConfig, type FleetProfilePatch, resolveAgentPreset } from './service.ts'
 import { createAdminHandlers } from './server.ts'
@@ -49,6 +49,13 @@ export const FLEET_AGENT_TOOL_NAMES = [
   'agent_disable',
   'agent_enable',
   'agent_list',
+  'fleet_heartbeat_create',
+  'fleet_heartbeat_update',
+  'fleet_heartbeat_delete',
+  'fleet_heartbeat_list',
+  'fleet_heartbeat_pause',
+  'fleet_heartbeat_resume',
+  'fleet_heartbeat_run_once',
 ] as const
 
 export type FleetAgentToolName = (typeof FLEET_AGENT_TOOL_NAMES)[number]
@@ -135,12 +142,56 @@ export function apply(ctx: Context, config: Config): void {
     }
 
     if (config.injectTools) {
-      injectTools(createdAgent.ctx, agent, enabled, sessionToFleet)
+      injectTools(createdAgent.ctx, ctx, agent, enabled, sessionToFleet)
     }
   })
 }
 
-function injectTools(agentCtx: Context, agent: FleetAgentService, enabled: Set<string>, sessionToFleet: Map<string, string>): void {
+/**
+ * Structural ctx.fleetSchedule surface for the heartbeat tools (avoids
+ * importing the concrete service — the family's optional-service pattern;
+ * the fleet-schedule plugin may or may not be composed).
+ */
+interface ScheduleLike {
+  create(input: {
+    prompt: string
+    name?: string
+    cadence: ScheduleCadence
+    maxRuns?: number
+    expiresInMs?: number
+    target: { type: 'agent'; agentId: string }
+  }, actor: string): ScheduleRecord
+  update(id: string, actor: string, patch: { name?: string | null; prompt?: string; cadence?: ScheduleCadence }): ScheduleRecord
+  delete(id: string, actor: string): { id: string }
+  list(agentId?: string): ScheduleRecord[]
+  inspect(id: string): ScheduleRecord | undefined
+  pause(id: string, actor: string): ScheduleRecord
+  resume(id: string, actor: string): ScheduleRecord
+  runOnce(id: string, actor: string): ScheduleRecord
+  getByAgent(agentId: string): ScheduleRecord[]
+}
+
+/** Resolve the optional fleet-schedule service, or throw a clear error. */
+function resolveSchedule(ctx: Context): ScheduleLike {
+  const schedule = ctx.get('fleetSchedule') as ScheduleLike | undefined
+  if (schedule === undefined) {
+    throw new Error('fleet heartbeat tools require the fleet-schedule plugin (@hydra/dsh-fleet-schedule) to be composed')
+  }
+  return schedule
+}
+
+/** Render one schedule line for tool output. */
+function renderScheduleSummary(value: JsonValue | undefined, prefix: string): { type: 'text'; text: string }[] {
+  const record = asRecord(value)
+  const schedule = asRecord(record?.schedule as JsonValue | undefined)
+  if (schedule === undefined) return [{ type: 'text', text: `${prefix}: no schedule returned` }]
+  const id = String(schedule.id)
+  const status = String(schedule.status)
+  const next = schedule.nextRunAt === null ? '—' : String(schedule.nextRunAt)
+  return [{ type: 'text', text: `${prefix} heartbeat ${id} [${status}, next ${next}] "${String(schedule.prompt).slice(0, 60)}"` }]
+}
+
+function injectTools(agentCtx: Context, rootCtx: Context, agent: FleetAgentService, enabled: Set<string>, sessionToFleet: Map<string, string>): void {
   // Helper: resolve exec.agent.id → fleet agentId via the mapping
   function resolveFleetId(agentId: string): string {
     return sessionToFleet.get(agentId) ?? agentId
@@ -343,6 +394,179 @@ function injectTools(agentCtx: Context, agent: FleetAgentService, enabled: Set<s
         return JSON.parse(JSON.stringify({ count: profiles.length, profiles })) as JsonValue
       },
       presentCall: () => ({ card: 'generic', title: 'List fleet agents', kind: 'other', rawInput: null }),
+    }))
+  }
+
+  // -------------------------------------------------------------------------
+  // Fleet heartbeat tools (API-based heartbeat management, requirement §1-3):
+  // agents create/update/delete/pause/resume/list/run their OWN heartbeats —
+  // a heartbeat is a schedule whose prompt is delivered to the calling agent
+  // on a cadence by the fleet-schedule service (ctx.fleetSchedule, optional).
+  // Ownership is enforced by the service: every mutation passes the caller's
+  // fleet id and the service throws when it is not the schedule's target.
+  // -------------------------------------------------------------------------
+  if (enabled.has('fleet_heartbeat_create')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_create',
+      description: "Create a fleet heartbeat for the calling agent: a prompt that is delivered to YOU on a repeat cadence. Cadence is json: {type:'every',everyMs:60000} for a fixed interval, or {type:'cron',expression:'*/15 * * * *',timezone?:'UTC'} for a 5-field cron (minute hour day-of-month month day-of-week; names, lists, ranges and steps supported). Optional maxRuns auto-pauses after N runs; optional expiresIn auto-pauses after N ms.",
+      parameters: {
+        name: { type: 'string', description: 'Human label for the heartbeat.' },
+        prompt: { type: 'string', required: true, description: 'The prompt delivered to the calling agent on each run.' },
+        cadence: { type: 'json', required: true, description: 'Cadence: {type:"every",everyMs:N} or {type:"cron",expression:"...",timezone?:string}.' },
+        maxRuns: { type: 'integer', description: 'Execute at most this many times, then auto-pause.' },
+        expiresIn: { type: 'integer', description: 'Auto-pause after this many ms from creation.' },
+      },
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => renderScheduleSummary(value, 'Created'),
+      },
+      execute: async (args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        const fleetId = resolveFleetId(exec.agent.id)
+        const created = schedule.create({
+          prompt: args.prompt,
+          ...(args.name !== undefined ? { name: args.name } : {}),
+          cadence: args.cadence as ScheduleCadence,
+          ...(args.maxRuns !== undefined ? { maxRuns: args.maxRuns } : {}),
+          ...(args.expiresIn !== undefined ? { expiresInMs: args.expiresIn } : {}),
+          target: { type: 'agent', agentId: fleetId },
+        }, fleetId)
+        return JSON.parse(JSON.stringify({ schedule: created })) as JsonValue
+      },
+      presentCall: args => ({ card: 'generic', title: 'Create fleet heartbeat', kind: 'other', rawInput: args }),
+    }))
+  }
+  if (enabled.has('fleet_heartbeat_update')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_update',
+      description: 'Update one of the calling agent\'s heartbeats: change its name, prompt, or cadence (a cadence change recomputes the next run from now). Unknown ids or another agent\'s heartbeats are rejected.',
+      parameters: {
+        id: { type: 'string', required: true, description: 'The heartbeat id to update.' },
+        name: { type: 'string', description: 'New human label.' },
+        prompt: { type: 'string', description: 'New prompt to deliver on each run.' },
+        cadence: { type: 'json', description: 'New cadence: {type:"every",everyMs:N} or {type:"cron",expression:"...",timezone?:string}.' },
+      },
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => renderScheduleSummary(value, 'Updated'),
+      },
+      execute: async (args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        const fleetId = resolveFleetId(exec.agent.id)
+        const patch: { name?: string | null; prompt?: string; cadence?: ScheduleCadence } = {}
+        if (args.name !== undefined) patch.name = args.name
+        if (args.prompt !== undefined) patch.prompt = args.prompt
+        if (args.cadence !== undefined) patch.cadence = args.cadence as ScheduleCadence
+        const updated = schedule.update(args.id, fleetId, patch)
+        return JSON.parse(JSON.stringify({ schedule: updated })) as JsonValue
+      },
+      presentCall: args => ({ card: 'generic', title: 'Update fleet heartbeat', kind: 'other', rawInput: args }),
+    }))
+  }
+  if (enabled.has('fleet_heartbeat_delete')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_delete',
+      description: 'Delete one of the calling agent\'s heartbeats. Only heartbeats owned by the calling agent can be deleted (must own).',
+      parameters: {
+        id: { type: 'string', required: true, description: 'The heartbeat id to delete.' },
+      },
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => {
+          const record = asRecord(value)
+          return [{ type: 'text', text: `Deleted heartbeat ${record?.id as string | undefined ?? '?'}` }]
+        },
+      },
+      execute: async (args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        return schedule.delete(args.id, resolveFleetId(exec.agent.id)) as unknown as JsonValue
+      },
+      presentCall: args => ({ card: 'generic', title: 'Delete fleet heartbeat', kind: 'other', rawInput: args }),
+    }))
+  }
+  if (enabled.has('fleet_heartbeat_list')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_list',
+      description: 'List the calling agent\'s heartbeats (id, name, cadence, status, nextRunAt, runCount). Use it to see what you are scheduled to receive.',
+      parameters: {},
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => {
+          const record = asRecord(value)
+          const list = Array.isArray(record?.schedules) ? record.schedules : []
+          return [{ type: 'text', text: `Your heartbeats: ${list.length}` }]
+        },
+      },
+      execute: async (_args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        const records = schedule.getByAgent(resolveFleetId(exec.agent.id))
+        return JSON.parse(JSON.stringify({ count: records.length, schedules: records })) as JsonValue
+      },
+      presentCall: () => ({ card: 'generic', title: 'List fleet heartbeats', kind: 'other', rawInput: null }),
+    }))
+  }
+  if (enabled.has('fleet_heartbeat_pause')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_pause',
+      description: 'Pause one of the calling agent\'s heartbeats: it stops firing (nextRunAt becomes null) until fleet_heartbeat_resume. The record and run history are kept.',
+      parameters: {
+        id: { type: 'string', required: true, description: 'The heartbeat id to pause.' },
+      },
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => renderScheduleSummary(value, 'Paused'),
+      },
+      execute: async (args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        const paused = schedule.pause(args.id, resolveFleetId(exec.agent.id))
+        return JSON.parse(JSON.stringify({ schedule: paused })) as JsonValue
+      },
+      presentCall: args => ({ card: 'generic', title: 'Pause fleet heartbeat', kind: 'other', rawInput: args }),
+    }))
+  }
+  if (enabled.has('fleet_heartbeat_resume')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_resume',
+      description: 'Resume a paused heartbeat of the calling agent: back to active, next run recomputed from now.',
+      parameters: {
+        id: { type: 'string', required: true, description: 'The heartbeat id to resume.' },
+      },
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => renderScheduleSummary(value, 'Resumed'),
+      },
+      execute: async (args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        const resumed = schedule.resume(args.id, resolveFleetId(exec.agent.id))
+        return JSON.parse(JSON.stringify({ schedule: resumed })) as JsonValue
+      },
+      presentCall: args => ({ card: 'generic', title: 'Resume fleet heartbeat', kind: 'other', rawInput: args }),
+    }))
+  }
+  if (enabled.has('fleet_heartbeat_run_once')) {
+    agentCtx.tools.register(defineTool({
+      name: 'fleet_heartbeat_run_once',
+      description: "Execute one of the calling agent's heartbeats immediately: the prompt is delivered right now and the run is recorded, without shifting the normal schedule. Refuses when the heartbeat is paused or its maxRuns/expiry already auto-paused it.",
+      parameters: {
+        id: { type: 'string', required: true, description: 'The heartbeat id to run now.' },
+      },
+      output: {
+        schema: { type: 'json' },
+        render: (_args, value) => renderScheduleSummary(value, 'Ran'),
+      },
+      execute: async (args, exec) => {
+        assertAgentCaller(exec.agent)
+        const schedule = resolveSchedule(rootCtx)
+        const ran = schedule.runOnce(args.id, resolveFleetId(exec.agent.id))
+        return JSON.parse(JSON.stringify({ schedule: ran })) as JsonValue
+      },
+      presentCall: args => ({ card: 'generic', title: 'Run fleet heartbeat now', kind: 'other', rawInput: args }),
     }))
   }
 }

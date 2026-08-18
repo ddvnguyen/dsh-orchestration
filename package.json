@@ -9,7 +9,7 @@
     "supervisor": "bash bin/fleet-supervisor.sh",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run test:all",
-    "test:all": "tsx tests/registry-smoke.ts && tsx tests/mcp-smoke.ts && tsx tests/inject-smoke.ts && tsx tests/fleet-claude-query-options.ts && tsx tests/fleet-claude-registry-child.ts && tsx tests/agent-smoke.ts && tsx tests/bus-smoke.ts && tsx tests/board-smoke.ts && tsx tests/tasks-smoke.ts && tsx tests/supervisor-smoke.ts && tsx tests/watchdog-smoke.ts && tsx tests/team-smoke.ts && tsx tests/fleet-policy-smoke.ts && tsx tests/fleet-budget-smoke.ts && tsx tests/fleet-extras-smoke.ts && tsx tests/fleet-teams-smoke.ts && tsx tests/teams-ui-smoke.ts && tsx tests/fleet-settings-smoke.ts && tsx tests/composition-smoke.ts && tsx tests/request-log-smoke.ts",
+    "test:all": "tsx tests/registry-smoke.ts && tsx tests/mcp-smoke.ts && tsx tests/inject-smoke.ts && tsx tests/fleet-claude-query-options.ts && tsx tests/fleet-claude-registry-child.ts && tsx tests/agent-smoke.ts && tsx tests/bus-smoke.ts && tsx tests/board-smoke.ts && tsx tests/tasks-smoke.ts && tsx tests/supervisor-smoke.ts && tsx tests/watchdog-smoke.ts && tsx tests/team-smoke.ts && tsx tests/fleet-policy-smoke.ts && tsx tests/fleet-budget-smoke.ts && tsx tests/fleet-extras-smoke.ts && tsx tests/fleet-teams-smoke.ts && tsx tests/teams-ui-smoke.ts && tsx tests/fleet-settings-smoke.ts && tsx tests/composition-smoke.ts && tsx tests/request-log-smoke.ts && tsx tests/schedule-smoke.ts",
     "test:registry": "tsx tests/registry-smoke.ts",
     "test:agent": "tsx tests/agent-smoke.ts",
     "test:bus": "tsx tests/bus-smoke.ts",
@@ -24,7 +24,8 @@
     "test:settings": "tsx tests/fleet-settings-smoke.ts",
     "test:composition": "tsx tests/composition-smoke.ts",
     "test:mcp": "tsx tests/mcp-smoke.ts",
-    "test:inject": "tsx tests/inject-smoke.ts"
+    "test:inject": "tsx tests/inject-smoke.ts",
+    "test:schedule": "tsx tests/schedule-smoke.ts"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "workspace:*",

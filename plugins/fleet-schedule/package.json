@@ -1,0 +1,14 @@
+{
+  "name": "@hydra/dsh-fleet-schedule",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype: API-based heartbeat management — agents create/update/delete/pause/resume/run heartbeats via tools; a 1s tick delivers each due schedule's prompt to its target agent via ctx.fleet.sendMessage (surfacing as a follow-up turn). Registers ctx.fleetSchedule + emits fleet/schedule-created / fleet/schedule-executed / fleet/schedule-deleted events. Requirement: fleet-schedule system (V3).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}
