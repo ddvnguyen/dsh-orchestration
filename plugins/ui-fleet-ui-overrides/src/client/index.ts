@@ -5,9 +5,10 @@
  * 1. FleetStatsLine into `conversation.composer.dock` (same cell id as the
  *    shipped StatsLine, so it shadows it) — shows context size instead of
  *    the input/output token figures.
- * 2. An empty entry into `conversation.input.right` occupying the ring's
- *    `context-meter` cell — removes the ContextMeter ring (redundant once
- *    the stats line shows context).
+ * 2. FleetContextMeter into `conversation.input.right` (same cell id as the
+ *    shipped ring, `context-meter`) — the context-occupancy ring restored
+ *    with a hover-open breakdown panel (system / tools / messages) in place
+ *    of the click-open one and of the empty occupant that removed the ring.
  * 3. ContextSummaryRow into `trajectory.context.summary` — sticky context
  *    header on the Trajectory view (slot declared by DSH ui-trajectory).
  * 4. Global CSS injection (side-effect import of styles.module.css) — hides
@@ -17,12 +18,15 @@
 
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 // Type-only: pulls ui-conversation's SlotMap merge ('conversation.composer.dock',
-// 'conversation.input.right') into this program so the register calls type-
-// check; ui-trajectory merges the 'trajectory.context.summary' row (added by
-// the parallel DSH-fork change); ui-settings rides the settings-family seam.
+// 'conversation.input.right') and its LocaleNamespaceMap merge ('conversation')
+// into this program so the register calls and the `t: TranslateNS<'conversation'>`
+// seat type-check; ui-trajectory merges the 'trajectory.context.summary' row
+// (added by the parallel DSH-fork change); ui-settings rides the settings-
+// family seam.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-trajectory/client'
+import { FleetContextMeter } from './FleetContextMeter.tsx'
 import { FleetStatsLine } from './FleetStatsLine.tsx'
 import { ContextSummaryRow } from './ContextSummaryRow.tsx'
 // Side-effect import: the client bundler extracts module CSS and injects a
@@ -50,13 +54,18 @@ export function apply(ctx: ClientContext): void {
     priority: -1,
   }, FleetStatsLine))
 
-  // Remove the ContextMeter ring: an empty occupant of its cell renders
-  // nothing and shadows the ring (harmless before the ring sits in the slot).
+  // The context-occupancy ring: replaces the empty occupant that removed the
+  // ring with the fleet hover meter. The locale seat rides the conversation
+  // namespace so the ring/panel labels localize with the rest of the
+  // composer; priority -1 keeps the fleet entry winning the cell if the core
+  // ever registers its own meter here (same shadowing rule as the stats line).
   ctx.slots.inject('conversation.input.right', () => ctx.slots.register({
     name: 'conversation.input.right',
     id: 'context-meter',
+    order: 0,
+    locale: 'conversation',
     priority: -1,
-  }, () => null))
+  }, FleetContextMeter))
 
   // Trajectory context summary. The inject waits for the declaration, so
   // this registers whenever the slot becomes live — safe both before the
