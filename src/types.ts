@@ -166,3 +166,71 @@ export type FleetSessionEventType =
   | 'fleet/resume'
   | 'fleet/message'
   | 'fleet/audit'
+
+/**
+ * Fleet schedule (heartbeat) vocabulary — API-based heartbeat management:
+ * a prompt delivered to a target agent on a cadence, with run history,
+ * pause/resume, and max-run / expiry auto-pause. Managed through the
+ * `fleet_heartbeat_*` agent tools backed by the `ctx.fleetSchedule` service
+ * (plugins/fleet-schedule). Model corresponds to the Paseo schedule daemon
+ * (packages/cli/src/commands/schedule/types.ts) with the family's epoch-ms
+ * timestamp convention.
+ * @section schedules
+ */
+
+/** Lifecycle status of a fleet schedule. */
+export type ScheduleStatus = 'active' | 'paused' | 'completed'
+
+/**
+ * How often a schedule fires: a fixed interval (`every`) or a 5-field cron
+ * expression (`minute hour day-of-month month day-of-week` — `*`, lists,
+ * ranges, steps, month/day names; optional IANA timezone).
+ */
+export type ScheduleCadence =
+  | { type: 'every'; everyMs: number }
+  | { type: 'cron'; expression: string; timezone?: string }
+
+/** One execution record in a schedule's run history (kept last 20). */
+export interface ScheduleRunRecord {
+  readonly id: string
+  /** Unix epoch ms the run was due (creation time for manual runs). */
+  scheduledFor: number
+  /** Unix epoch ms execution began. */
+  startedAt: number
+  /** 'running' while delivering; resolves to 'succeeded' / 'failed'. */
+  status: 'running' | 'succeeded' | 'failed'
+  /** The target agent id of the run. */
+  agentId: string
+  /** Delivery error text, when the run failed (null on success). */
+  error: string | null
+}
+
+/**
+ * One fleet schedule (heartbeat): `prompt` delivered to `target.agentId` on
+ * `cadence`. Timestamps are Unix epoch ms. `runCount` is the cumulative run
+ * counter used for `maxRuns` accounting — `runs` is trimmed to the last
+ * {@link MAX_SCHEDULE_RUN_HISTORY} entries, so it cannot count runs itself.
+ */
+export interface ScheduleRecord {
+  readonly id: string
+  /** Human label (optional). */
+  name: string | null
+  /** The prompt delivered to the target agent on each run. */
+  prompt: string
+  cadence: ScheduleCadence
+  /** Receiving agent (also the owning agent for tool-scoped mutations). */
+  target: { type: 'agent'; agentId: string }
+  status: ScheduleStatus
+  readonly createdAt: number
+  updatedAt: number
+  /** Unix epoch ms of the next due run (null while paused/completed). */
+  nextRunAt: number | null
+  lastRunAt: number | null
+  pausedAt: number | null
+  expiresAt: number | null
+  maxRuns: number | null
+  /** Cumulative runs ever (maxRuns accounting; runs[] capped at 20). */
+  runCount: number
+  /** Run history, oldest → newest, capped at the last 20 runs. */
+  runs: ScheduleRunRecord[]
+}

@@ -1,0 +1,100 @@
+/* ===========================================================================
+ * Fleet UI overrides styles.
+ *
+ * Two layers share this file:
+ * 1. GLOBAL rules (below) — attribute selectors, shipped unchanged into the
+ *    plugin-owned <style> tag. DSH renders hashed CSS-module class names
+ *    (e.g. `o_AupW_tabs`), so the spec selectors are kept verbatim AND an
+ *    effective set targets the real DOM: the session header is
+ *    `<header class="…_header">` and its tab list is `<div role="tablist"
+ *    class="…_tabs">`.
+ * 2. SCOPED component classes (bottom) — hashed to `_<prefix>_<local>` by
+ *    the client bundler and referenced via `css.<name>` in the components.
+ * ========================================================================= */
+
+/* ---- 1. Global: hide the view tab bar — Trajectory opens via context button ---- */
+
+/* Spec selectors (kept verbatim). */
+[class*="ConversationSession"] nav[class*="tabs"],
+[class*="header"] nav[class*="viewTabs"] {
+  display: none !important;
+}
+
+/* Effective selectors: the session header renders its tab list as a
+   div[role=tablist] whose hashed class carries the `<file>_tabs` suffix. */
+header[class*="_header"] [role="tablist"],
+header[class*="_header"] [class*="_tabs"] {
+  display: none !important;
+}
+
+/* ---- 1. Global: slim the header by reducing padding ---- */
+
+/* Spec selector (kept verbatim). */
+[class*="ConversationSession"] header[class*="header"] {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Effective selector: the session header is the app's main `<header>` and
+   its hashed class carries the `<file>_header` suffix. */
+header[class*="_header"] {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* With the tab bar hidden there is nothing between the title row and the
+   scrollport; keep margins tight so the slim header stays one row tall. */
+header[class*="_header"] [class*="_titleRow"] {
+  margin-bottom: 0;
+}
+
+/* ---- 2. Scoped component classes ---- */
+
+/* FleetStatsLine — ambient readout under the composer card. */
+.statsRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 18px;
+  padding: 2px 4px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-text-secondary, #8a8f98);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statsSep {
+  color: var(--dsw-alias-border-secondary, #3a3f46);
+}
+
+/* ContextSummaryRow — sticky row pinned at the top of the Trajectory view. */
+.contextSummaryRow {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-text-secondary, #8a8f98);
+  background: var(--dsw-surface, var(--dsw-alias-bg-secondary, #1b1d21));
+  border-bottom: 1px solid var(--dsw-alias-border-secondary, #3a3f46);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cellSep {
+  margin: 0 4px;
+  color: var(--dsw-alias-border-secondary, #3a3f46);
+}
+
+.cell {
+  font-variant-numeric: tabular-nums;
+}
