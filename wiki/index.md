@@ -15,6 +15,7 @@ updated: 2026-08-18
 - [[fleet-budget]] — Cost tracking, scoped caps, soft warnings, escalation
 - [[fleet-bus]] — Durable event store with pub/sub/replay and delivery
 - [[fleet-extras]] — Workspace watch, subscribe, collision detection
+- [[fleet-github]] — GitHub App auth + MCP server integration
 - [[fleet-heartbeat]] — Agent registry, liveness tracking, stall detection
 - [[fleet-inject]] — Auto-inject fleet tools into new agents
 - [[fleet-mcp]] — MCP server exposing fleet registry as tools

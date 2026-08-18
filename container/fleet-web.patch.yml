@@ -62,3 +62,14 @@
       inject: ['webServer', 'fleetAgent', 'fleetTeams', 'fleetBudget', 'fleetPolicy']
       config:
         home: !!js dshHomePath('')
+
+    # SearXNG metasearch: local web search via the self-hosted SearXNG instance.
+    # Registers `web_search` on ctx.tools — the same name the DeepSeek search
+    # tool uses, so the fleet gets local search without external API keys.
+    - id: fleet-searxng
+      name: '@hydra/dsh-fleet-searxng'
+      config:
+        searxngUrl: http://127.0.0.1:8099
+        timeoutMs: 30000
+        language: en
+        maxResults: 10
