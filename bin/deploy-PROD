@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# deploy-PROD — Start DSH PROD environment
+# Requires confirmation. Affects production data.
+set -uo pipefail
+
+# ── Configuration ──────────────────────────────────────────────────────
+FLEET="$(cd "$(dirname "$0")/.." && pwd)"
+export DSH_HOME="${HOME}/.dsh"
+HARNESS="$FLEET/external/deepseek-harness"
+SEED="$FLEET/../llm-server-monitoring/dsh-fleet-container"
+WEB_PORT="${FLEET_PROD_WEB_PORT:-3080}"
+
+# ── Safety: verify DSH_HOME is PROD ───────────────────────────────────
+if [ "$DSH_HOME" != "$HOME/.dsh" ] && [ "$DSH_HOME" != "$HOME/dsh" ]; then
+  echo "[deploy-PROD] ERROR: DSH_HOME is not PROD ($DSH_HOME). Aborting." >&2
+  exit 1
+fi
+
+# ── Confirmation gate ──────────────────────────────────────────────────
+echo "=== Deploy PROD ==="
+echo "DSH_HOME: $DSH_HOME"
+echo "Harness: $HARNESS"
+echo "Port: $WEB_PORT"
+echo ""
+echo "This will restart the PROD DSH server."
+echo "Current data in $DSH_HOME will NOT be modified."
+echo ""
+read -p "Continue? [y/N] " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+  echo "Aborted."
+  exit 0
+fi
+
+# ── Create directory structure (never delete existing data) ────────────
+mkdir -p "$DSH_HOME/fleet/logs" \
+         "$DSH_HOME/fleet/agent" \
+         "$DSH_HOME/fleet/worktrees" \
+         "$DSH_HOME/profiles/node_modules/@hydra"
+
+# ── Kill only this port (never kill by name) ──────────────────────────
+EXISTING_PID=$(lsof -ti:$WEB_PORT 2>/dev/null || true)
+if [ -n "$EXISTING_PID" ]; then
+  echo "[deploy-PROD] Stopping existing process on :$WEB_PORT (PID $EXISTING_PID)"
+  kill "$EXISTING_PID" 2>/dev/null
+  sleep 2
+fi
+
+# ── Trusted hosts ─────────────────────────────────────────────────────
+FLEET_PROD_TRUSTED_HOSTS="${FLEET_PROD_TRUSTED_HOSTS:-localhost 127.0.0.1 harness.ddvnguyen.com}"
+
+# ── Create @hydra symlinks (server plugins from fleet repo) ───────────
+HYDRA_DIR="$DSH_HOME/profiles/node_modules/@hydra"
+for plugin in fleet-agent fleet-teams fleet-teams-ui fleet-board fleet-bus fleet-budget fleet-policy fleet-settings fleet-schedule; do
+  target="$FLEET/plugins/$plugin"
+  if [ -d "$target" ]; then
+    ln -sfn "$target" "$HYDRA_DIR/dsh-$plugin"
+  fi
+done
+
+# ── Bootstrap agent profiles (only if missing — never overwrite) ──────
+if [ ! -f "$DSH_HOME/fleet/agent/profiles.json" ]; then
+  echo "[deploy-PROD] Bootstrapping agent profiles..."
+  cd "$FLEET"
+  TSX="$HARNESS/node_modules/.bin/tsx"
+  DSH_HOME="$DSH_HOME" "$TSX" team/bootstrap.ts
+fi
+
+# ── ESM resolution: ensure profiles/web/node_modules exists ───────────
+ln -sfn "$DSH_HOME/profiles/node_modules" "$DSH_HOME/profiles/web/node_modules" 2>/dev/null || true
+
+# ── Start DSH web ─────────────────────────────────────────────────────
+cd "$HARNESS"
+TRUSTED_FLAGS=()
+for host in $FLEET_PROD_TRUSTED_HOSTS; do
+  TRUSTED_FLAGS+=(--trusted-host "$host")
+done
+
+DSH_HOME="$DSH_HOME" pnpm --config.verify-deps-before-run=false dsh web \
+  --patch "$SEED/fleet-web.patch.yml" \
+  --host 0.0.0.0 \
+  "${TRUSTED_FLAGS[@]}" \
+  --port "$WEB_PORT" \
+  > "$DSH_HOME/fleet/logs/dsh-web.out.log" 2>&1 &
+WEB_PID=$!
+
+# ── Verify startup ────────────────────────────────────────────────────
+sleep 5
+if kill -0 $WEB_PID 2>/dev/null; then
+  echo "[deploy-PROD] DSH web started (PID $WEB_PID)"
+  echo "[deploy-PROD] Logs: $DSH_HOME/fleet/logs/dsh-web.out.log"
+  echo "[deploy-PROD] URL: http://localhost:$WEB_PORT"
+else
+  echo "[deploy-PROD] ERROR: DSH web failed to start. Check logs:" >&2
+  tail -20 "$DSH_HOME/fleet/logs/dsh-web.out.log" >&2
+  exit 1
+fi
+
+echo ""
+echo "Press Ctrl+C to stop"
+wait $WEB_PID
