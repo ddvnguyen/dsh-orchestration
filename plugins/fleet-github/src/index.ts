@@ -124,6 +124,54 @@ export class FleetGithubService extends Service {
     process.stderr.write(`[${ts}] [fleet-github] ${level} ${msg}\n`)
   }
 
+  // ── Process Helpers ──
+
+  private execCmd(cmd: string, args: string[], timeoutMs = 20_000): Promise<string> {
+    return new Promise((resolve, reject) => {
+      let done = false
+      const proc = spawn(cmd, args, {
+        env: { ...process.env, PATH: `${this.config.nodeBin}:${process.env.PATH ?? ''}` },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      let stdout = '', stderr = ''
+      proc.stdout.on('data', d => stdout += d)
+      proc.stderr.on('data', d => stderr += d)
+
+      const timer = setTimeout(() => {
+        if (!done) { done = true; proc.kill('SIGKILL'); reject(new Error(`Timeout after ${timeoutMs}ms`)) }
+      }, timeoutMs)
+
+      proc.on('close', code => {
+        clearTimeout(timer)
+        if (done) return
+        done = true
+        if (code === 0) resolve(stdout.trim())
+        else reject(new Error(stderr.trim() || `exit code ${code}`))
+      })
+      proc.on('error', err => {
+        clearTimeout(timer)
+        if (!done) { done = true; reject(err) }
+      })
+    })
+  }
+
+  private async execWithRetry(cmd: string, args: string[], retries: number, baseDelayMs: number, label: string): Promise<string> {
+    let lastErr: Error | undefined
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await this.execCmd(cmd, args)
+      } catch (err: any) {
+        lastErr = err
+        if (i < retries) {
+          const delay = baseDelayMs * Math.pow(2, i)
+          this.log('WARN', `${label} attempt ${i + 1}/${retries + 1} failed: ${err.message} — retrying in ${delay}ms`)
+          await new Promise(r => setTimeout(r, delay))
+        }
+      }
+    }
+    throw new Error(`${label} failed after ${retries + 1} attempts: ${lastErr?.message}`)
+  }
+
   // ── Token Management ──
 
   private async fetchPrivateKey(): Promise<string> {
@@ -361,7 +409,7 @@ export class FleetGithubService extends Service {
 // ── Plugin ──
 
 export const name = 'fleet-github'
-export inject = ['tools']
+export const inject = ['tools']
 
 export interface Config {
   appId?: string
