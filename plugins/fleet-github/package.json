@@ -1,0 +1,16 @@
+{
+  "name": "@hydra/dsh-fleet-github",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitHub App authentication + MCP server integration for DSH fleet. Manages GitHub App token lifecycle via Doppler, spawns mcp-server-github, and exposes GitHub tools (repos, PRs, issues, code search) to fleet agents.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/dsh-subprocess": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
+  }
+}

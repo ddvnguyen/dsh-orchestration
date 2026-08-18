@@ -75,7 +75,7 @@ fi
 FALLBACK_NM="$DSH_HOME/profiles/node_modules"
 HYDRA_DIR="$FALLBACK_NM/@hydra"
 mkdir -p "$HYDRA_DIR"
-for plugin in fleet-agent fleet-teams fleet-teams-ui fleet-board fleet-bus fleet-budget fleet-policy fleet-settings; do
+for plugin in fleet-agent fleet-teams fleet-teams-ui fleet-board fleet-bus fleet-budget fleet-policy fleet-settings fleet-github; do
   target="$FLEET/plugins/$plugin"
   if [ -d "$target" ]; then
     ln -sfn "$target" "$HYDRA_DIR/dsh-$plugin"
