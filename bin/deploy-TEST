@@ -6,8 +6,8 @@ set -uo pipefail
 # ── Configuration ──────────────────────────────────────────────────────
 FLEET="$(cd "$(dirname "$0")/.." && pwd)"
 export DSH_HOME="${HOME}/dsh-test"
-HARNESS="$FLEET/../llm-server-monitoring/external/deepseek-harness"
-SEED="$FLEET/../llm-server-monitoring/dsh-fleet-container"
+HARNESS="$FLEET/external/deepseek-harness"
+SEED="$FLEET/dsh-fleet-container"
 WEB_PORT="${FLEET_TEST_WEB_PORT:-3081}"
 
 # TEST-only: separate OpenCode config
@@ -65,23 +65,13 @@ fi
 # ── ESM resolution: ensure profiles/web/node_modules exists ───────────
 ln -sfn "$DSH_HOME/profiles/node_modules" "$DSH_HOME/profiles/web/node_modules" 2>/dev/null || true
 
-# ── Build fleet client bundles from submodule (source of truth) ──────
-SUBMODULE="$FLEET/external/deepseek-harness"
-if [ -d "$SUBMODULE/packages/client/ui-fleet-ui-overrides" ]; then
+# ── Build fleet client bundles (source of truth is this submodule) ───
+if [ -d "$HARNESS/packages/client/ui-fleet-ui-overrides" ]; then
   echo "[deploy-TEST] Building fleet client bundles..."
-  cd "$SUBMODULE"
+  cd "$HARNESS"
   pnpm --filter @deepseek-ai/dsh-client-ui-fleet-ui-overrides run bundle 2>/dev/null || true
   pnpm --filter @deepseek-ai/dsh-client-ui-fleet-sidebar run bundle 2>/dev/null || true
-  # Copy to HARNESS
-  cp "$SUBMODULE/packages/client/ui-fleet-ui-overrides/lib/client.js" \
-     "$HARNESS/packages/client/ui-fleet-ui-overrides/lib/client.js" 2>/dev/null || true
-  cp "$SUBMODULE/packages/client/ui-fleet-ui-overrides/lib/client.js.map" \
-     "$HARNESS/packages/client/ui-fleet-ui-overrides/lib/client.js.map" 2>/dev/null || true
-  cp "$SUBMODULE/packages/client/ui-fleet-sidebar/lib/client.js" \
-     "$HARNESS/packages/client/ui-fleet-sidebar/lib/client.js" 2>/dev/null || true
-  cp "$SUBMODULE/packages/client/ui-fleet-sidebar/lib/client.js.map" \
-     "$HARNESS/packages/client/ui-fleet-sidebar/lib/client.js.map" 2>/dev/null || true
-  echo "[deploy-TEST] Fleet bundles built and copied."
+  echo "[deploy-TEST] Fleet bundles built."
 fi
 
 # ── Start DSH web ─────────────────────────────────────────────────────
